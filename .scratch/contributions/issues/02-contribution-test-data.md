@@ -6,12 +6,12 @@ Every contribution is created alongside its own payment — never sharing one �
 
 **Blocked by:** 01 — Prefactor: relocate enums into `App\Enums`
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A contribution factory exists, creating its own payment alongside each contribution
-- [ ] It offers readable states for a pending contribution and a paid one (a paid contribution's payment is verified and carries a reference; a pending one's is not)
-- [ ] It offers a way to set the contributor, the wish, and the visibility
-- [ ] Amounts generated are plausible Toman values, consistent with the wish factory's price range (see ADR-0002)
-- [ ] Seeding produces wishes at a mix of funding levels — some untouched, some partly funded, some over their price — with contributions spread across several contributors
-- [ ] `php artisan migrate:fresh --seed` completes without error
-- [ ] Pint clean, larastan clean
+- [x] A contribution factory exists, creating its own payment alongside each contribution
+- [x] It offers readable states for a pending contribution and a paid one (a paid contribution's payment is verified and carries a reference; a pending one's is not)
+- [x] It offers a way to set the contributor, the wish, and the visibility
+- [x] Amounts generated are plausible Toman values, consistent with the wish factory's price range (see ADR-0002)
+- [x] Seeding produces wishes at a mix of funding levels — some untouched, some partly funded, some over their price — with contributions spread across several contributors
+- [x] `php artisan migrate:fresh --seed` completes without error
+- [x] Pint clean, larastan clean
