@@ -19,7 +19,7 @@ return new class extends Migration
             $table->text('description');
             $table->string('thumbnail')->nullable();
             $table->string('purchase_link');
-            $table->integer('price');
+            $table->unsignedInteger('price');
             $table->timestamps();
         });
     }

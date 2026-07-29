@@ -20,12 +20,14 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(Wish::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(User::class, 'contributor_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignIdFor(Payment::class)->constrained()->restrictOnDelete();
-            $table->integer('amount');
+            $table->foreignIdFor(Payment::class)->unique()->constrained()->restrictOnDelete();
+            $table->unsignedInteger('amount');
             $table->text('message')->nullable();
             $table->string('visibility')->default(ContributionVisibility::Public->value);
             $table->string('status')->default(ContributionStatus::Pending->value);
             $table->timestamps();
+
+            $table->index(['wish_id', 'status']);
         });
     }
 

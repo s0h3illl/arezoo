@@ -14,13 +14,11 @@ return new class extends Migration
     {
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
-            $table->integer('amount');
-            $table->string('transaction_id')->nullable();
+            $table->unsignedInteger('amount');
+            $table->string('transaction_id')->nullable()->unique();
             $table->string('reference_id')->nullable();
             $table->string('status')->default(PaymentStatus::Pending->value);
             $table->timestamps();
-
-            $table->index('transaction_id');
         });
     }
 
