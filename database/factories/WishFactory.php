@@ -55,14 +55,6 @@ class WishFactory extends Factory
     }
 
     /**
-     * Indicate the user the wish belongs to.
-     */
-    public function forOwner(User $owner): static
-    {
-        return $this->for($owner, 'owner');
-    }
-
-    /**
      * Indicate that the wish has no thumbnail image.
      */
     public function withoutThumbnail(): static

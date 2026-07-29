@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Wish;
+use Illuminate\Database\Seeder;
 
 class WishSeeder extends Seeder
 {
@@ -19,12 +18,12 @@ class WishSeeder extends Seeder
         $users->each(function (User $user): void {
             Wish::factory()
                 ->count(fake()->numberBetween(3, 8))
-                ->forOwner($user)
+                ->for($user, 'owner')
                 ->create();
 
             Wish::factory()
                 ->withoutThumbnail()
-                ->forOwner($user)
+                ->for($user, 'owner')
                 ->create();
         });
     }

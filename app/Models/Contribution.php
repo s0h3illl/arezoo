@@ -41,7 +41,6 @@ class Contribution extends Model
     protected $guarded = [];
 
     /**
-     *
      * @return array<string, string>
      */
     protected function casts(): array

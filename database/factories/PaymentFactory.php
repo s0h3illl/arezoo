@@ -25,4 +25,15 @@ class PaymentFactory extends Factory
             'status' => PaymentStatus::Pending,
         ];
     }
+
+    /**
+     * Indicate that the gateway confirmed the attempt and handed back a reference.
+     */
+    public function verified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'reference_id' => (string) fake()->unique()->numberBetween(1_000_000, 9_999_999),
+            'status' => PaymentStatus::Verified,
+        ]);
+    }
 }
