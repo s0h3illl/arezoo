@@ -1,11 +1,13 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use App\Enums\ContributionStatus;
+use App\Enums\ContributionVisibility;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Wish;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {

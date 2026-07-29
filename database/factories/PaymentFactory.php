@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\PaymentStatus;
 use App\Models\Payment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
