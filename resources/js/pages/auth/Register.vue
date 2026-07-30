@@ -144,33 +144,20 @@ function submit(): void {
                     >
                         تکرار رمز عبور
                     </label>
+                    <!--
+                        No error block here: Laravel's `confirmed` rule always
+                        reports a mismatch on `password`, never on
+                        `password_confirmation`, so the message renders above
+                        and this field carries no error state of its own.
+                    -->
                     <input
                         id="password_confirmation"
                         v-model="form.password_confirmation"
                         type="password"
                         dir="ltr"
                         autocomplete="new-password"
-                        :aria-invalid="
-                            Boolean(form.errors.password_confirmation)
-                        "
-                        :aria-describedby="
-                            form.errors.password_confirmation
-                                ? 'password_confirmation-error'
-                                : undefined
-                        "
-                        :class="
-                            inputClasses(
-                                Boolean(form.errors.password_confirmation),
-                            )
-                        "
+                        :class="inputClasses(false)"
                     />
-                    <p
-                        v-if="form.errors.password_confirmation"
-                        id="password_confirmation-error"
-                        class="text-xs text-red-600"
-                    >
-                        {{ form.errors.password_confirmation }}
-                    </p>
                 </div>
 
                 <button

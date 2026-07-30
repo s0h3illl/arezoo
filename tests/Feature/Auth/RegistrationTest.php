@@ -38,6 +38,42 @@ test('registration requires every field', function () {
     ]);
 });
 
+test('registration rejects invalid input with a Persian error on the right field', function (array $input, string $field, string $message) {
+    $response = $this->from(route('register'))->post(route('register.store'), [
+        'name' => 'آرزو عباسی',
+        'email' => 'arezoo@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        ...$input,
+    ]);
+
+    $this->assertGuest();
+    $response->assertRedirect(route('register'))->assertSessionHasErrors([$field => $message]);
+})->with([
+    'malformed email' => [
+        ['email' => 'not-an-email'],
+        'email',
+        'ایمیل باید یک نشانی ایمیل معتبر باشد.',
+    ],
+    'password shorter than eight characters' => [
+        ['password' => 'short', 'password_confirmation' => 'short'],
+        'password',
+        'رمز عبور باید دست‌کم 8 کاراکتر باشد.',
+    ],
+    // Laravel's `confirmed` rule always reports on the password field, never on
+    // the confirmation field the user actually mistyped.
+    'confirmation that does not match' => [
+        ['password_confirmation' => 'different-password'],
+        'password',
+        'رمز عبور با تکرارش یکی نیست.',
+    ],
+    'name longer than the column allows' => [
+        ['name' => str_repeat('ا', 256)],
+        'name',
+        'نام نباید بیشتر از 255 کاراکتر باشد.',
+    ],
+]);
+
 test('registration rejects an email that is already taken', function () {
     $existing = User::factory()->create();
 
@@ -49,44 +85,24 @@ test('registration rejects an email that is already taken', function () {
     ]);
 
     $this->assertGuest();
-    $response->assertSessionHasErrors(['email' => 'این ایمیل قبلاً ثبت شده است.']);
+    $response->assertRedirect(route('register'))
+        ->assertSessionHasErrors(['email' => 'این ایمیل قبلاً ثبت شده است.']);
 });
 
-test('registration rejects a malformed email', function () {
+test('registration matches an existing email case-insensitively', function () {
+    User::factory()->create(['email' => 'arezoo@example.com']);
+
     $response = $this->from(route('register'))->post(route('register.store'), [
         'name' => 'آرزو عباسی',
-        'email' => 'not-an-email',
+        'email' => 'AREZOO@Example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
     ]);
 
     $this->assertGuest();
-    $response->assertSessionHasErrors(['email' => 'ایمیل باید یک نشانی ایمیل معتبر باشد.']);
-});
-
-test('registration rejects a password shorter than eight characters', function () {
-    $response = $this->from(route('register'))->post(route('register.store'), [
-        'name' => 'آرزو عباسی',
-        'email' => 'arezoo@example.com',
-        'password' => 'short',
-        'password_confirmation' => 'short',
-    ]);
-
-    $this->assertGuest();
-    $response->assertSessionHasErrors('password');
-    expect(session('errors')->first('password'))->toContain('رمز عبور');
-});
-
-test('registration rejects a confirmation that does not match', function () {
-    $response = $this->from(route('register'))->post(route('register.store'), [
-        'name' => 'آرزو عباسی',
-        'email' => 'arezoo@example.com',
-        'password' => 'password',
-        'password_confirmation' => 'different-password',
-    ]);
-
-    $this->assertGuest();
-    $response->assertSessionHasErrors(['password' => 'رمز عبور با تکرارش یکی نیست.']);
+    $response->assertRedirect(route('register'))
+        ->assertSessionHasErrors(['email' => 'این ایمیل قبلاً ثبت شده است.']);
+    expect(User::where('email', 'AREZOO@Example.com')->exists())->toBeFalse();
 });
 
 test('authenticated users are redirected away from the registration screen', function () {
