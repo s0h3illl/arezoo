@@ -1,7 +1,9 @@
 <?php
 
-test('the login page loads without javascript errors', function () {
+test('login page renders without javascript errors', function () {
     $page = visit(route('login', absolute: false));
 
-    $page->assertSee('ورود')->assertNoJavaScriptErrors();
+    // The Persian copy only exists once Vue mounts, so seeing it is what stops
+    // a missing or broken bundle from passing the error assertion vacuously.
+    $page->assertNoJavaScriptErrors()->assertSee('خوش برگشتی!');
 });
