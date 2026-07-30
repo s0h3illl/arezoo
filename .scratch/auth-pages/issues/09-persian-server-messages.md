@@ -6,10 +6,24 @@ Consult the research findings on branch `research/persian-auth-messages` (`docs/
 
 **Blocked by:** None — can start immediately.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] A failed login shows the Persian auth-failure message; throttled logins show the Persian throttle message
-- [ ] Validation errors on the login form (and the rules the coming auth forms use, including the default password rule failures) render in Persian, with Persian attribute names
-- [ ] The password-broker status lines and Fortify's literal strings (e.g. the incorrect-password confirm message) have Persian translations in place
-- [ ] Both notification emails' sentences are translated in the JSON lang file (asserted when tickets 12/13 exercise them)
-- [ ] Existing feature tests updated where they asserted English text, and green
+- [x] A failed login shows the Persian auth-failure message; throttled logins show the Persian throttle message
+- [x] Validation errors on the login form (and the rules the coming auth forms use, including the default password rule failures) render in Persian, with Persian attribute names
+- [x] The password-broker status lines and Fortify's literal strings (e.g. the incorrect-password confirm message) have Persian translations in place
+- [x] Both notification emails' sentences are translated in the JSON lang file (asserted when tickets 12/13 exercise them)
+- [x] Existing feature tests updated where they asserted English text, and green
+
+**Note on the throttle line:** the route-level `throttle:login` middleware trips before Fortify's
+login pipeline, and its `Too Many Attempts.` is a hardcoded English literal in
+`ThrottleRequests::buildException()` that no lang file can reach. The `login` limiter in
+`FortifyServiceProvider` therefore attaches a `->response(...)` callback returning the Persian
+`auth.throttle` line as a field error (429 + rate-limit headers for JSON clients, redirect-back
+with the error inline for browsers). Limits themselves are unchanged. Fortify's verification-resend
+route ships `throttle:6,1` with the same hardcoded literal — it will need the identical treatment
+in ticket 13.
+
+**Note on tests:** by explicit instruction, no tests were written for the language files. The
+Persian output was verified by hand over HTTP instead. Nothing currently guards these strings
+against regression — in particular the throttle path, which the browser smoke seam (ticket 10)
+does not cover either.
