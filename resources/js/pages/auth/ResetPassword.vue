@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
 
+import TextField from '@/components/TextField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { cn } from '@/lib/utils';
 import { update } from '@/routes/password';
 
 defineOptions({ layout: AppLayout });
@@ -18,15 +18,6 @@ const form = useForm({
     password: '',
     password_confirmation: '',
 });
-
-function inputClasses(hasError: boolean): string {
-    return cn(
-        'w-full rounded-[14px] border bg-slate-50 px-4 py-[13px] text-left text-[15px] text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-[3px] focus:outline-none',
-        hasError
-            ? 'border-red-400 ring-[3px] ring-red-500/15'
-            : 'border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/15',
-    );
-}
 
 function submit(): void {
     form.post(update.url(), {
@@ -51,90 +42,42 @@ function submit(): void {
                 </p>
             </div>
 
-            <form
-                novalidate
-                class="flex flex-col gap-[18px] rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)] sm:p-8"
-                @submit.prevent="submit"
-            >
-                <div class="flex flex-col gap-1.5">
-                    <label
-                        for="email"
-                        class="text-[13px] font-bold text-slate-700"
-                    >
-                        ایمیل
-                    </label>
-                    <input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        dir="ltr"
-                        placeholder="you@example.com"
-                        autocomplete="username"
-                        :aria-invalid="Boolean(form.errors.email)"
-                        :aria-describedby="
-                            form.errors.email ? 'email-error' : undefined
-                        "
-                        :class="inputClasses(Boolean(form.errors.email))"
-                    />
-                    <p
-                        v-if="form.errors.email"
-                        id="email-error"
-                        class="text-xs text-red-600"
-                    >
-                        {{ form.errors.email }}
-                    </p>
-                </div>
+            <form novalidate class="auth-form" @submit.prevent="submit">
+                <TextField
+                    id="email"
+                    v-model="form.email"
+                    label="ایمیل"
+                    type="email"
+                    dir="ltr"
+                    placeholder="you@example.com"
+                    autocomplete="username"
+                    :error="form.errors.email"
+                />
 
-                <div class="flex flex-col gap-1.5">
-                    <label
-                        for="password"
-                        class="text-[13px] font-bold text-slate-700"
-                    >
-                        رمز عبور جدید
-                    </label>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        dir="ltr"
-                        autocomplete="new-password"
-                        :aria-invalid="Boolean(form.errors.password)"
-                        :aria-describedby="
-                            form.errors.password ? 'password-error' : undefined
-                        "
-                        :class="inputClasses(Boolean(form.errors.password))"
-                    />
-                    <p
-                        v-if="form.errors.password"
-                        id="password-error"
-                        class="text-xs text-red-600"
-                    >
-                        {{ form.errors.password }}
-                    </p>
-                </div>
+                <TextField
+                    id="password"
+                    v-model="form.password"
+                    label="رمز عبور جدید"
+                    type="password"
+                    dir="ltr"
+                    autocomplete="new-password"
+                    :error="form.errors.password"
+                />
 
-                <div class="flex flex-col gap-1.5">
-                    <label
-                        for="password_confirmation"
-                        class="text-[13px] font-bold text-slate-700"
-                    >
-                        تکرار رمز عبور جدید
-                    </label>
-                    <!--
-                        No error block here: Laravel's `confirmed` rule always
-                        reports a mismatch on `password`, never on
-                        `password_confirmation`, so the message renders above
-                        and this field carries no error state of its own.
-                    -->
-                    <input
-                        id="password_confirmation"
-                        v-model="form.password_confirmation"
-                        type="password"
-                        dir="ltr"
-                        autocomplete="new-password"
-                        :class="inputClasses(false)"
-                    />
-                </div>
+                <!--
+                    No `error` passed here: Laravel's `confirmed` rule always
+                    reports a mismatch on `password`, never on
+                    `password_confirmation`, so the message renders above
+                    and this field carries no error state of its own.
+                -->
+                <TextField
+                    id="password_confirmation"
+                    v-model="form.password_confirmation"
+                    label="تکرار رمز عبور جدید"
+                    type="password"
+                    dir="ltr"
+                    autocomplete="new-password"
+                />
 
                 <button
                     type="submit"

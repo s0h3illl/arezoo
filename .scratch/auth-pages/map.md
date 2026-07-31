@@ -25,6 +25,7 @@ A build-ready spec at `.scratch/auth-pages/spec.md` covering the five missing au
 - [Forgot & reset password flow decisions](issues/03-password-reset-flow-decisions.md) — Fortify defaults Persian-ized; honest errors, reset lands on login with flash.
 - [Confirm password page decisions](issues/04-confirm-password-page-decisions.md) — dedicated page in the Login card pattern, intended-URL return.
 - [Localization approach decision](issues/06-localization-approach-decision.md) — hand-rolled `lang/fa`, `APP_LOCALE=fa` + `en` fallback, emails via notification callbacks; consult research branch when building.
+- [Extract auth form primitives](issues/15-extract-auth-form-primitives.md) — prefactor: `TextField.vue` + `auth-form`/`field-input` utilities replace the four copies of `inputClasses`; tickets 13 and 14 build on them.
 - [Assemble the auth-pages spec](issues/07-assemble-the-spec.md) — **destination reached**: [spec](spec.md) published `ready-for-agent` via `/to-spec`, fast-forwarding tickets 01–04 and 06.
 
 ## Not yet specified

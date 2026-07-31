@@ -4,6 +4,8 @@
 
 **Blocked by:** 08 — Land the Login layout refactor; 09 — Persian server messages; 10 — Browser smoke seam.
 
+**Build on:** 15 — the shared `TextField.vue` component and the `auth-form` / `field-input` utilities. The password field uses those rather than copying Login's markup.
+
 **Status:** ready-for-agent
 
 - [ ] The confirm-password route renders the page in the shared layout and card pattern for authenticated users

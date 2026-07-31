@@ -4,6 +4,8 @@
 
 **Blocked by:** 11 — Register page; 12 — Forgot & reset password flow.
 
+**Build on:** 15 — the shared `TextField.vue` component and the `auth-form` / `field-input` utilities. Any form on the notice page uses those rather than copying Login's markup.
+
 **Status:** ready-for-agent
 
 - [ ] Fortify's email verification feature is enabled and the User model implements the verification contract

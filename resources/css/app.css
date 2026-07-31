@@ -8,3 +8,23 @@
         Vazirmatn, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
         'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* The card that wraps a stack of form fields and its submit button. */
+@utility auth-form {
+    @apply flex flex-col gap-[18px] rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)] sm:p-8;
+}
+
+/*
+    A single-line form control. The error treatment hangs off `aria-invalid`
+    rather than a separate class so the styling can never drift apart from the
+    attribute a screen reader reads. The nested rule is written last on purpose:
+    it ties with `&:focus` on specificity, so source order is what keeps an
+    errored field red instead of flipping to emerald once it takes focus.
+*/
+@utility field-input {
+    @apply w-full rounded-[14px] border border-slate-200 bg-slate-50 px-4 py-[13px] text-left text-[15px] text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:bg-white focus:ring-[3px] focus:ring-emerald-500/15 focus:outline-none;
+
+    &[aria-invalid='true'] {
+        @apply border-red-400 ring-[3px] ring-red-500/15;
+    }
+}
