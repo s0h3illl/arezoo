@@ -1,21 +1,22 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, useForm } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
-import { register } from '@/routes';
-import { store } from '@/routes/login';
-import { request as passwordRequest } from '@/routes/password';
+import { update } from '@/routes/password';
 
 defineOptions({ layout: AppLayout });
 
-defineProps<{
-    status?: string;
+const props = defineProps<{
+    email?: string;
+    token: string;
 }>();
 
 const form = useForm({
-    email: '',
+    token: props.token,
+    email: props.email ?? '',
     password: '',
+    password_confirmation: '',
 });
 
 function inputClasses(hasError: boolean): string {
@@ -28,22 +29,8 @@ function inputClasses(hasError: boolean): string {
 }
 
 function submit(): void {
-    form.clearErrors();
-
-    if (form.email.trim() === '') {
-        form.setError('email', 'ایمیلت رو وارد کن.');
-    }
-
-    if (form.password.length < 8) {
-        form.setError('password', 'رمز عبور باید حداقل ۸ کاراکتر باشه.');
-    }
-
-    if (form.hasErrors) {
-        return;
-    }
-
-    form.post(store.url(), {
-        onFinish: () => form.reset('password'),
+    form.post(update.url(), {
+        onFinish: () => form.reset('password', 'password_confirmation'),
     });
 }
 </script>
@@ -52,24 +39,17 @@ function submit(): void {
     <main
         class="flex flex-1 items-center justify-center bg-[radial-gradient(ellipse_60%_50%_at_50%_20%,#d1fae5,transparent_70%)] px-4 py-10"
     >
-        <Head title="ورود" />
+        <Head title="بازیابی رمز عبور" />
 
         <div class="w-full max-w-[400px]">
             <div class="mb-6 text-center">
                 <h1 class="text-2xl font-black text-slate-900 sm:text-3xl">
-                    خوش برگشتی!
+                    یک رمز تازه بساز
                 </h1>
                 <p class="mt-2 text-sm text-slate-500">
-                    وارد شو تا لیست آرزوهات منتظرت نمونن.
+                    یک رمز عبور جدید انتخاب کن تا دوباره وارد بشی.
                 </p>
             </div>
-
-            <p
-                v-if="status"
-                class="mb-4 rounded-[14px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-bold text-emerald-700"
-            >
-                {{ status }}
-            </p>
 
             <form
                 novalidate
@@ -106,26 +86,18 @@ function submit(): void {
                 </div>
 
                 <div class="flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between">
-                        <label
-                            for="password"
-                            class="text-[13px] font-bold text-slate-700"
-                        >
-                            رمز عبور
-                        </label>
-                        <Link
-                            :href="passwordRequest()"
-                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700"
-                        >
-                            فراموش کردی؟
-                        </Link>
-                    </div>
+                    <label
+                        for="password"
+                        class="text-[13px] font-bold text-slate-700"
+                    >
+                        رمز عبور جدید
+                    </label>
                     <input
                         id="password"
                         v-model="form.password"
                         type="password"
                         dir="ltr"
-                        autocomplete="current-password"
+                        autocomplete="new-password"
                         :aria-invalid="Boolean(form.errors.password)"
                         :aria-describedby="
                             form.errors.password ? 'password-error' : undefined
@@ -139,6 +111,29 @@ function submit(): void {
                     >
                         {{ form.errors.password }}
                     </p>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                    <label
+                        for="password_confirmation"
+                        class="text-[13px] font-bold text-slate-700"
+                    >
+                        تکرار رمز عبور جدید
+                    </label>
+                    <!--
+                        No error block here: Laravel's `confirmed` rule always
+                        reports a mismatch on `password`, never on
+                        `password_confirmation`, so the message renders above
+                        and this field carries no error state of its own.
+                    -->
+                    <input
+                        id="password_confirmation"
+                        v-model="form.password_confirmation"
+                        type="password"
+                        dir="ltr"
+                        autocomplete="new-password"
+                        :class="inputClasses(false)"
+                    />
                 </div>
 
                 <button
@@ -167,20 +162,9 @@ function submit(): void {
                             d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"
                         />
                     </svg>
-                    <span v-else>ورود</span>
+                    <span v-else>تغییر رمز عبور</span>
                 </button>
             </form>
-
-            <p class="mt-6 text-center text-sm text-slate-500">
-                حساب نداری؟
-                <Link
-                    :href="register()"
-                    class="font-bold text-emerald-600 hover:text-emerald-700"
-                >
-                    ثبت‌نام کن
-                </Link>
-                — رایگانه!
-            </p>
         </div>
     </main>
 </template>

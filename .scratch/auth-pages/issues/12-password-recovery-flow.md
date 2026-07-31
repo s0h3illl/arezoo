@@ -4,11 +4,22 @@
 
 **Blocked by:** 08 — Land the Login layout refactor; 09 — Persian server messages; 10 — Browser smoke seam.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Forgot-password page renders in the card pattern, reachable from login's existing link
-- [ ] Submitting a known email sends the reset notification and shows the Persian status flash; an unknown email shows the Persian validation error
-- [ ] The reset notification's subject and body are Persian, rendered in an RTL mail layout (vendor mail views published, direction set)
-- [ ] The reset page renders from the emailed link with the email pre-filled; valid submission resets the password and redirects to login with a Persian flash; no auto-login
-- [ ] An expired or invalid token shows a clear Persian error
-- [ ] Feature tests cover the whole loop with the notification fake (including Persian subject assertion); browser smoke tests cover both pages
+- [x] Forgot-password page renders in the card pattern, reachable from login's existing link
+- [x] Submitting a known email sends the reset notification and shows the Persian status flash; an unknown email shows the Persian validation error
+- [x] The reset notification's subject and body are Persian, rendered in an RTL mail layout (vendor mail views published, direction set)
+- [x] The reset page renders from the emailed link with the email pre-filled; valid submission resets the password and redirects to login with a Persian flash; no auto-login
+- [x] An expired or invalid token shows a clear Persian error
+- [x] Feature tests cover the whole loop with the notification fake (including Persian subject assertion); browser smoke tests cover both pages
+
+## Comments
+
+**Review note (code-review, on landing):** the card-pattern markup (`inputClasses()`, the input/label/error
+triplet, the spinner button, and now the status-flash box) is duplicated across all four auth pages.
+No standard violated, but it's third-strike territory — worth extracting shared `AuthInput`/`SubmitButton`
+components when the next auth page (ticket 13 or 14) touches this pattern.
+
+**Mechanism note:** the reset success flash rides Fortify's session `status`, shared app-wide via
+`HandleInertiaRequests` (the starter-kit mechanism). Login and ForgotPassword render it; other pages
+receive the prop but ignore it.

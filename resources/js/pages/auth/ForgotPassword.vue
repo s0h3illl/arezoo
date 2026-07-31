@@ -3,9 +3,8 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import { cn } from '@/lib/utils';
-import { register } from '@/routes';
-import { store } from '@/routes/login';
-import { request as passwordRequest } from '@/routes/password';
+import { login } from '@/routes';
+import { email as sendResetLink } from '@/routes/password';
 
 defineOptions({ layout: AppLayout });
 
@@ -15,7 +14,6 @@ defineProps<{
 
 const form = useForm({
     email: '',
-    password: '',
 });
 
 function inputClasses(hasError: boolean): string {
@@ -32,19 +30,11 @@ function submit(): void {
 
     if (form.email.trim() === '') {
         form.setError('email', 'ایمیلت رو وارد کن.');
-    }
 
-    if (form.password.length < 8) {
-        form.setError('password', 'رمز عبور باید حداقل ۸ کاراکتر باشه.');
-    }
-
-    if (form.hasErrors) {
         return;
     }
 
-    form.post(store.url(), {
-        onFinish: () => form.reset('password'),
-    });
+    form.post(sendResetLink.url());
 }
 </script>
 
@@ -52,15 +42,15 @@ function submit(): void {
     <main
         class="flex flex-1 items-center justify-center bg-[radial-gradient(ellipse_60%_50%_at_50%_20%,#d1fae5,transparent_70%)] px-4 py-10"
     >
-        <Head title="ورود" />
+        <Head title="فراموشی رمز عبور" />
 
         <div class="w-full max-w-[400px]">
             <div class="mb-6 text-center">
                 <h1 class="text-2xl font-black text-slate-900 sm:text-3xl">
-                    خوش برگشتی!
+                    رمزت رو فراموش کردی؟
                 </h1>
                 <p class="mt-2 text-sm text-slate-500">
-                    وارد شو تا لیست آرزوهات منتظرت نمونن.
+                    ایمیلت رو بنویس تا لینک بازیابی رمز عبور رو برات بفرستیم.
                 </p>
             </div>
 
@@ -105,42 +95,6 @@ function submit(): void {
                     </p>
                 </div>
 
-                <div class="flex flex-col gap-1.5">
-                    <div class="flex items-center justify-between">
-                        <label
-                            for="password"
-                            class="text-[13px] font-bold text-slate-700"
-                        >
-                            رمز عبور
-                        </label>
-                        <Link
-                            :href="passwordRequest()"
-                            class="text-xs font-bold text-emerald-600 hover:text-emerald-700"
-                        >
-                            فراموش کردی؟
-                        </Link>
-                    </div>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        dir="ltr"
-                        autocomplete="current-password"
-                        :aria-invalid="Boolean(form.errors.password)"
-                        :aria-describedby="
-                            form.errors.password ? 'password-error' : undefined
-                        "
-                        :class="inputClasses(Boolean(form.errors.password))"
-                    />
-                    <p
-                        v-if="form.errors.password"
-                        id="password-error"
-                        class="text-xs text-red-600"
-                    >
-                        {{ form.errors.password }}
-                    </p>
-                </div>
-
                 <button
                     type="submit"
                     :disabled="form.processing"
@@ -167,19 +121,18 @@ function submit(): void {
                             d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"
                         />
                     </svg>
-                    <span v-else>ورود</span>
+                    <span v-else>ارسال لینک بازیابی</span>
                 </button>
             </form>
 
             <p class="mt-6 text-center text-sm text-slate-500">
-                حساب نداری؟
+                رمزت یادت اومد؟
                 <Link
-                    :href="register()"
+                    :href="login()"
                     class="font-bold text-emerald-600 hover:text-emerald-700"
                 >
-                    ثبت‌نام کن
+                    وارد شو
                 </Link>
-                — رایگانه!
             </p>
         </div>
     </main>
