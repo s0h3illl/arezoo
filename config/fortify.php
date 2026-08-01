@@ -77,6 +77,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Redirects
+    |--------------------------------------------------------------------------
+    |
+    | Fortify falls back to `home` above for any redirect left unset here. Every
+    | account starts unverified, and a fresh registrant can't act on the home
+    | page yet, so `register` points at the verification notice instead.
+    |
+    */
+
+    'redirects' => [
+        'register' => '/email/verify',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Fortify Routes Prefix / Subdomain
     |--------------------------------------------------------------------------
     |

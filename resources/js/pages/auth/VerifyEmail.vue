@@ -31,10 +31,10 @@ defineProps<{
             </div>
 
             <p
-                v-if="status"
+                v-if="status === 'verification-link-sent'"
                 class="mb-4 rounded-[14px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-sm font-bold text-emerald-700"
             >
-                {{ status }}
+                لینک تأیید تازه‌ای برایتان ایمیل شد.
             </p>
 
             <Form :action="send()" class="auth-form" #default="{ processing }">

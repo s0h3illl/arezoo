@@ -11,3 +11,10 @@ parameters:
         - routes/
 
     level: 7
+
+    ignoreErrors:
+        -
+            # Always true in this app since User implements MustVerifyEmail, but the
+            # check is kept so the action stays diffable against Fortify's stub.
+            identifier: instanceof.alwaysTrue
+            path: app/Actions/Fortify/UpdateUserProfileInformation.php
