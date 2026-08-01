@@ -8,9 +8,14 @@ This lands first on purpose. It is the prefactor for tickets 17–19: with these
 
 **Known and accepted gap:** nothing will cover the Persian notification emails or the RTL mail layout — browser smoke tests cannot see email. The user has weighed this and accepted it; do not reintroduce feature tests to close it.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] All feature tests under `tests/Feature/Auth/` are removed
-- [ ] All five browser smoke tests still pass and remain the whole auth suite
-- [ ] No test helper, dataset, or Pest hook left orphaned by the removals
-- [ ] The full suite passes, and Pint / Larastan / ESLint / Prettier / vue-tsc stay clean
+- [x] All feature tests under `tests/Feature/Auth/` are removed
+- [x] All five browser smoke tests still pass and remain the whole auth suite
+- [x] No test helper, dataset, or Pest hook left orphaned by the removals
+- [x] The full suite passes, and Pint / Larastan / ESLint / Prettier / vue-tsc stay clean
+
+## Comments
+
+- Verified: `tests/Feature/Auth/` no longer exists, no other test file outside `tests/Browser` references Auth, and the full suite passes.
+- Larastan, ESLint, Prettier, and vue-tsc are clean. Pint flags one pre-existing issue in `bootstrap/providers.php`, committed before this ticket and untouched by it — out of scope here.

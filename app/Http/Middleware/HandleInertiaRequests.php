@@ -41,7 +41,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'status' => $request->session()->get('status'),
+            // The error page shares these props from outside the `web` group, where a
+            // 404 never started a session, so reaching for the store would throw.
+            'status' => $request->hasSession() ? $request->session()->get('status') : null,
         ];
     }
 }

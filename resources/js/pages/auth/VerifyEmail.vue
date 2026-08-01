@@ -11,10 +11,6 @@ defineOptions({ layout: AppLayout });
 defineProps<{
     email: string;
     status?: string;
-    // Read off the page rather than the form slot: the throttle also fires on the
-    // emailed link, and that redirect carries its error here without any form
-    // submission to populate a slot bag. Inertia always shares this prop.
-    errors: { verification?: string };
 }>();
 </script>
 
@@ -56,20 +52,7 @@ defineProps<{
                     </span>
                 </div>
 
-                <p
-                    v-if="errors.verification"
-                    id="verification-error"
-                    class="text-xs text-red-600"
-                >
-                    {{ errors.verification }}
-                </p>
-
-                <SubmitButton
-                    :processing="processing"
-                    :aria-describedby="
-                        errors.verification ? 'verification-error' : undefined
-                    "
-                >
+                <SubmitButton :processing="processing">
                     ارسال دوباره‌ی لینک
                 </SubmitButton>
             </Form>

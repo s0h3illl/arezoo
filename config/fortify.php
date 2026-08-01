@@ -112,13 +112,17 @@ return [
     | every email and IP address combination. However, if you would like to
     | specify a custom rate limiter to call then you may specify it here.
     |
+    | A null `login` hands throttling to Fortify's own login pipeline, which
+    | counts only failed attempts, clears them on success, and answers with the
+    | Persian `auth.throttle` line. `verification` is left out rather than
+    | nulled: Fortify interpolates that one straight into `throttle:` with no
+    | guard, so only an absent key falls back to its shipped `6,1`.
+    |
     */
 
     'limiters' => [
-        'login' => 'login',
-        'two-factor' => 'two-factor',
+        'login' => null,
         'passkeys' => 'passkeys',
-        'verification' => 'verification',
     ],
 
     /*
