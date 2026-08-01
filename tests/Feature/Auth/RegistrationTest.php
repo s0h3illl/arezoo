@@ -20,7 +20,7 @@ test('new users can register', function () {
     ]);
 
     $this->assertAuthenticated();
-    $response->assertRedirect('/');
+    $response->assertRedirect(route('verification.notice'));
 
     expect(User::where('email', 'arezoo@example.com')->first())
         ->not->toBeNull()

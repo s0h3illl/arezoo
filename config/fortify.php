@@ -118,6 +118,7 @@ return [
         'login' => 'login',
         'two-factor' => 'two-factor',
         'passkeys' => 'passkeys',
+        'verification' => 'verification',
     ],
 
     /*
@@ -164,7 +165,7 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        // Features::emailVerification(),
+        Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
         Features::passkeys([

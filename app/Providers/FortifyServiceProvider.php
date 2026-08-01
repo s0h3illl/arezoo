@@ -6,6 +6,8 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Responses\EmailVerificationNotificationSentResponse;
+use App\Http\Responses\RegisterResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -13,6 +15,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Laravel\Fortify\Contracts\EmailVerificationNotificationSentResponse as EmailVerificationNotificationSentResponseContract;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Fortify;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
@@ -23,7 +27,11 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(RegisterResponseContract::class, RegisterResponse::class);
+        $this->app->singleton(
+            EmailVerificationNotificationSentResponseContract::class,
+            EmailVerificationNotificationSentResponse::class
+        );
     }
 
     /**
@@ -43,11 +51,23 @@ class FortifyServiceProvider extends ServiceProvider
             'email' => $request->input('email'),
             'token' => $request->route('token'),
         ]));
+        Fortify::verifyEmailView(fn (Request $request): Response => Inertia::render('auth/VerifyEmail', [
+            'email' => $request->user()->email,
+        ]));
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey)->response($this->throttledLoginResponse(...));
+        });
+
+        // Fortify ships `throttle:6,1` here; this named limiter exists only to answer
+        // in Persian, so it keeps the shipped rate and the shipped per-user key. Both
+        // routes sit behind `auth`, so there is always a user to key by.
+        RateLimiter::for('verification', function (Request $request) {
+            return Limit::perMinute(6)
+                ->by($request->user()->getAuthIdentifier())
+                ->response($this->throttledVerificationResponse(...));
         });
 
         RateLimiter::for('passkeys', function (Request $request) {
@@ -89,6 +109,27 @@ class FortifyServiceProvider extends ServiceProvider
         return back()
             ->withInput($request->only(Fortify::username()))
             ->withErrors([Fortify::username() => $message])
+            ->withHeaders($headers);
+    }
+
+    /**
+     * Reject a rate-limited verification request with the Persian throttle message.
+     *
+     * Same trap as the login limiter: the throttle middleware's `Too Many Attempts.`
+     * is a hardcoded English literal. The limiter guards the resend button and the
+     * emailed link alike, and a click from a mail client carries no referer, so the
+     * notice — not `back()` — is the one page that always renders the message.
+     *
+     * @param  array<string, mixed>  $headers
+     */
+    protected function throttledVerificationResponse(Request $request, array $headers): HttpResponse
+    {
+        $message = trans('verification.throttle', [
+            'seconds' => (int) $headers['Retry-After'],
+        ]);
+
+        return redirect()->route('verification.notice')
+            ->withErrors(['verification' => $message])
             ->withHeaders($headers);
     }
 }
