@@ -13,6 +13,6 @@
 - [ ] The list can be filtered to blocked users only
 - [ ] A search that matches nothing shows an explained empty state, not a blank table
 - [ ] A search term survives pagination — moving to page two does not silently drop the filter
-- [ ] A non-admin cannot reach the screen (404), and a guest is redirected to login
+- [ ] A non-admin cannot reach the screen (404), and a guest gets the same 404
 - [ ] A browser smoke test visits the list and asserts no JavaScript errors
 - [ ] Pint clean, larastan clean

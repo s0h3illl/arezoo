@@ -12,6 +12,6 @@
 - [ ] Failed attempts show their amount in Toman and when the attempt was made
 - [ ] A pending attempt — one that reached the gateway and never came back — is distinguishable from a failed one
 - [ ] Gateway attempts are read-only; there is no way to edit or delete one
-- [ ] A non-admin cannot reach the screen (404), and a guest is redirected to login
+- [ ] A non-admin cannot reach the screen (404), and a guest gets the same 404
 - [ ] A browser smoke test visits the screen and asserts no JavaScript errors
 - [ ] Pint clean, larastan clean

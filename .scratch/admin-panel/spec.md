@@ -19,7 +19,7 @@ This spec builds the admin shell and its first two screens. The withdrawals scre
 1. As an admin, I want a section of the app only I can reach, so that moderation tools are never exposed to users.
 2. As an admin, I want to reach the admin section from the app itself once signed in, so that I do not have to remember a URL.
 3. As a user who is not an admin, I want the admin section to be indistinguishable from a page that does not exist, so that I never learn there is a panel to attack.
-4. As a signed-out visitor, I want admin URLs to send me to login rather than reveal anything, so that the panel's existence is not advertised.
+4. As a signed-out visitor, I want admin URLs to look like pages that do not exist, so that the panel's existence is not advertised.
 5. As an admin, I want the panel to read in Persian and RTL like the rest of the app, so that it does not feel like a separate product.
 6. As an admin, I want a navigation shell shared by every admin screen, so that moving between users, contributions, and withdrawals is one click.
 7. As an admin, I want a list of every user, so that I can find anyone who is reported or in trouble.
@@ -63,7 +63,7 @@ This spec builds the admin shell and its first two screens. The withdrawals scre
 
 - Admin status is a boolean on the user, defaulting to false, with no UI anywhere that sets it — an admin is made in a seeder or directly in the database. There is no role concept and no permissions package.
 - Blocking is recorded as a nullable timestamp rather than a boolean, so "blocked" and "blocked when" are the same fact. Unblocking clears it.
-- Admin screens live under an admin URL prefix behind three gates: authenticated, verified, and admin. A signed-in non-admin gets a 404, not a 403 — a 403 confirms the panel exists. A signed-out visitor follows the framework's normal redirect to login.
+- Admin screens live under an admin URL prefix behind a single gate: admin. A signed-in non-admin gets a 404, not a 403 — a 403 confirms the panel exists. A signed-out visitor gets the same 404, not a login redirect, which would confirm it just as loudly. Email verification is not a gate here; the admin check subsumes it, since admin is granted out-of-band.
 - The admin section has its own Inertia layout — a navigation shell with links to users, contributions, and (once specified) withdrawals — but reuses the app's Persian RTL direction, typography, and colour language rather than introducing a second visual system.
 - Blocked users are refused during authentication with a dedicated Persian message distinct from the invalid-credentials message, and their sessions are invalidated at the moment of blocking.
 - Hiding a blocked user's content is expressed once, as a single query-level rule that public-facing reads inherit, so a new listing or page cannot forget it. Reaching a blocked user's profile or wish directly redirects home rather than 404-ing — matching the answer given for this feature, and avoiding confirming that the resource exists.
@@ -79,7 +79,7 @@ This spec builds the admin shell and its first two screens. The withdrawals scre
 - A good test asserts external behaviour at the HTTP boundary: what renders, what a POST does to database state, where it redirects, and what a subsequent request can and cannot see. It never reaches into how a balance, a filter, or a gate is computed.
 - One seam: Pest feature tests over the admin HTTP routes. There is no separate model-level seam for blocking or admin status — both are asserted through what the panel does and what the blocked user can no longer do.
 - Prior art: the existing feature tests in this repo (Pest with `RefreshDatabase`, Inertia component assertions on GET, redirect and state assertions on POST) and the auth feature tests' handling of session state.
-- Access control gets its own tests as a matter of course: signed-out, signed-in non-admin, and admin each hitting every admin route, asserting the non-admin sees a 404 rather than a 403.
+- Access control gets its own tests as a matter of course: signed-out, signed-in non-admin, and admin each hitting every admin route, asserting both non-admin cases see a 404 rather than a 403 or a redirect.
 - Factory states are added for an admin user and a blocked user, following the naming already used by the contribution factory's `paid()` and `pending()` states.
 - Blocking is tested through its consequence — a blocked user's sign-in attempt fails with the blocked message, and their session no longer authenticates — not by asserting a column.
 - The contributions screen is tested for what it lists and how it filters, plus one test that a failed gateway attempt with no contribution is still visible, since that is the case the screen exists for.

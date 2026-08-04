@@ -15,6 +15,6 @@ The relationship from a user to the wishes they own does not exist in the code y
 - [ ] Block and unblock are available from the detail view as well as the list
 - [ ] A user with no wishes and no contributions gets explained empty states, not blank sections
 - [ ] A contribution the user made with hidden or owner-only visibility is still visible to the admin — visibility governs what users see, not what moderation sees
-- [ ] A non-admin cannot reach the screen (404), and a guest is redirected to login
+- [ ] A non-admin cannot reach the screen (404), and a guest gets the same 404
 - [ ] A browser smoke test visits the detail view and asserts no JavaScript errors
 - [ ] Pint clean, larastan clean

@@ -18,6 +18,6 @@ This ticket also records the settlement time, which the app does not capture tod
 - [ ] The list can be narrowed to a single contributor
 - [ ] A contribution with hidden or owner-only visibility shows its contributor to the admin
 - [ ] There is no way to edit or delete a contribution from this screen
-- [ ] A non-admin cannot reach the screen (404), and a guest is redirected to login
+- [ ] A non-admin cannot reach the screen (404), and a guest gets the same 404
 - [ ] A browser smoke test visits the list and asserts no JavaScript errors
 - [ ] `php artisan migrate:fresh --seed` completes, Pint clean, larastan clean
