@@ -44,6 +44,16 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that an admin has barred the user from the app.
+     */
+    public function blocked(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_blocked' => true,
+        ]);
+    }
+
+    /**
      * Indicate that the model's email address should be verified.
      */
     public function verified(): static

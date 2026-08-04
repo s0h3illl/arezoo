@@ -8,6 +8,7 @@ import HomeIcon from '@/components/icons/HomeIcon.vue';
 import MenuIcon from '@/components/icons/MenuIcon.vue';
 import { home } from '@/routes';
 import { dashboard } from '@/routes/admin';
+import users from '@/routes/admin/users';
 
 const page = usePage();
 
@@ -19,14 +20,19 @@ const isMenuOpen = ref(false);
  */
 const navItems = computed(() => [
     { label: 'داشبورد', href: dashboard().url },
-    { label: 'کاربران', href: '#' },
+    { label: 'کاربران', href: users.index().url },
     { label: 'مشارکت‌ها', href: '#' },
     { label: 'برداشت‌ها', href: '#' },
     { label: 'تنظیمات', href: '#' },
 ]);
 
+/**
+ * Compared on path alone: the users screen carries its search term in the query
+ * string, and a link that unhighlighted itself the moment you searched would be
+ * telling you that you had left the section.
+ */
 function isActive(href: string): boolean {
-    return href !== '#' && page.url === href;
+    return href !== '#' && page.url.split('?')[0] === href;
 }
 </script>
 
