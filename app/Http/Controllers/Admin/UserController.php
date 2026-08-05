@@ -4,11 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Http\Resources\Admin\UserResource;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,11 +25,10 @@ class UserController extends Controller
             ->when($search !== '', fn (Builder $query) => $query->matching($search))
             ->orderByDesc('id')
             ->paginate(20)
-            ->withQueryString()
-            ->through($this->toRow(...));
+            ->withQueryString();
 
         return Inertia::render('admin/users/Index', [
-            'users' => $users,
+            'users' => UserResource::collection($users),
             'filters' => [
                 'search' => $search,
             ],
@@ -58,24 +57,5 @@ class UserController extends Controller
         $user->save();
 
         return back();
-    }
-
-    /**
-     * The one row the list renders.
-     *
-     * Deliberately narrow: the panel is admin-only, so this is not a leak, but a
-     * column added to `users` later should not silently ride along to the frontend.
-     *
-     * @return array{id: int, name: string, email: string, email_verified_at: ?Carbon, is_blocked: bool}
-     */
-    private function toRow(User $user): array
-    {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'email_verified_at' => $user->email_verified_at,
-            'is_blocked' => $user->is_blocked,
-        ];
     }
 }

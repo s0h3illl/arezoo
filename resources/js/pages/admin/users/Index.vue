@@ -5,20 +5,20 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { index, update } from '@/routes/admin/users';
-import type { Paginated } from '@/types';
+import type { Paginated, User } from '@/types';
 
 defineOptions({ layout: AdminLayout });
 
-type UserRow = {
-    id: number;
-    name: string;
-    email: string;
-    email_verified_at: string | null;
-    is_blocked: boolean;
-};
+/**
+ * One row of the list, mirroring `App\Http\Resources\Admin\UserResource`.
+ *
+ * Derived from `User` rather than written out again: a field that changes shape
+ * cannot come to mean one thing here and another everywhere else.
+ */
+type AdminUserRow = Omit<User, 'is_admin' | 'created_at' | 'updated_at'>;
 
 const props = defineProps<{
-    users: Paginated<UserRow>;
+    users: Paginated<AdminUserRow>;
     filters: { search: string };
 }>();
 
@@ -52,7 +52,7 @@ onBeforeUnmount(() => clearTimeout(debounceTimer));
  * What clicking the badge would do — a blocked user's badge reads as a state,
  * so the label it cannot show goes on the button itself.
  */
-function blockActionLabel(user: UserRow): string {
+function blockActionLabel(user: AdminUserRow): string {
     return user.is_blocked
         ? `رفع مسدودی ${user.name}`
         : `مسدود کردن ${user.name}`;
@@ -64,7 +64,7 @@ function blockActionLabel(user: UserRow): string {
  * The browser's own dialog is the confirmation step for now — blocking reaches a
  * real person, so it is never one click. A designed modal replaces this later.
  */
-function toggleBlock(user: UserRow): void {
+function toggleBlock(user: AdminUserRow): void {
     const question = user.is_blocked
         ? `مسدودی ${user.name} برداشته بشه؟`
         : `${user.name} مسدود بشه؟ از این به بعد نمی‌تونه وارد بشه.`;
@@ -79,11 +79,6 @@ function toggleBlock(user: UserRow): void {
         { preserveScroll: true, preserveState: true },
     );
 }
-
-/** Persian digits, so the table does not read half in one script and half in another. */
-function toPersianDigits(value: number): string {
-    return value.toLocaleString('fa-IR');
-}
 </script>
 
 <template>
@@ -95,7 +90,7 @@ function toPersianDigits(value: number): string {
                 کاربران
             </h1>
             <p class="mt-2 text-sm text-slate-500">
-                {{ toPersianDigits(users.total) }} کاربر روی پلتفرم.
+                {{ users.meta.total }} کاربر روی پلتفرم.
             </p>
 
             <form
@@ -207,20 +202,20 @@ function toPersianDigits(value: number): string {
             </div>
 
             <nav
-                v-if="users.last_page > 1"
+                v-if="users.meta.last_page > 1"
                 aria-label="صفحه‌بندی کاربران"
                 class="mt-6 flex items-center justify-between gap-4"
             >
-                <PaginationLink :href="users.prev_page_url">
+                <PaginationLink :href="users.links.prev">
                     صفحه‌ی قبل
                 </PaginationLink>
 
                 <p class="text-sm text-slate-500">
-                    صفحه‌ی {{ toPersianDigits(users.current_page) }} از
-                    {{ toPersianDigits(users.last_page) }}
+                    صفحه‌ی {{ users.meta.current_page }} از
+                    {{ users.meta.last_page }}
                 </p>
 
-                <PaginationLink :href="users.next_page_url">
+                <PaginationLink :href="users.links.next">
                     صفحه‌ی بعد
                 </PaginationLink>
             </nav>

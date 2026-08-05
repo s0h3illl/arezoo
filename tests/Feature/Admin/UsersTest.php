@@ -25,7 +25,7 @@ test('the list is paginated', function () {
     $this->get(route('admin.users.index'))->assertInertia(
         fn (AssertableInertia $page) => $page
             ->has('users.data', 20)
-            ->where('users.total', 25)
+            ->where('users.meta.total', 25)
     );
 
     $this->get(route('admin.users.index', ['page' => 2]))->assertInertia(
@@ -125,14 +125,14 @@ test('a search term survives pagination', function () {
 
     $response = $this->get(route('admin.users.index', ['search' => 'سارا']));
 
-    $nextPage = $response->viewData('page')['props']['users']['next_page_url'];
+    $nextPage = $response->viewData('page')['props']['users']['links']['next'];
 
     expect($nextPage)->toContain('search=')->toContain('page=2');
 
     $this->get($nextPage)->assertInertia(
         fn (AssertableInertia $page) => $page
             ->has('users.data', 5)
-            ->where('users.total', 25)
+            ->where('users.meta.total', 25)
             ->where('filters.search', 'سارا')
     );
 });
@@ -144,7 +144,7 @@ test('a search that matches nothing returns an empty page rather than everyone',
     $this->get(route('admin.users.index', ['search' => 'هیچ‌کس']))->assertInertia(
         fn (AssertableInertia $page) => $page
             ->has('users.data', 0)
-            ->where('users.total', 0)
+            ->where('users.meta.total', 0)
             ->where('filters.search', 'هیچ‌کس')
     );
 });
