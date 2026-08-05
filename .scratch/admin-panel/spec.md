@@ -34,7 +34,7 @@ This spec builds the admin shell and its first two screens. The withdrawals scre
 16. As an admin, I want to confirm before blocking, so that a misclick does not lock a real person out.
 17. As an admin, I want a blocked user's existing session dropped, so that blocking takes effect now rather than whenever they next sign in.
 18. As an admin, I want to unblock a user, so that a moderation decision is reversible when it was wrong or the reason has passed.
-19. As an admin, I want to see when a user was blocked, so that I know how long a decision has stood.
+19. ~~As an admin, I want to see when a user was blocked, so that I know how long a decision has stood.~~ — **dropped:** blocked state is a boolean, so there is no "when" to show. Recording the moment of every moderation decision is an audit log, which this spec lists as out of scope.
 20. As a blocked user, I want a clear Persian message when I try to sign in, so that I know my account is blocked rather than my password being wrong.
 21. As a blocked user, I want my money to be untouched by the block, so that being barred from the app is not a confiscation.
 22. As a visitor, I want a blocked user's profile to send me home, so that blocking actually hides them.
@@ -62,7 +62,7 @@ This spec builds the admin shell and its first two screens. The withdrawals scre
 ## Implementation Decisions
 
 - Admin status is a boolean on the user, defaulting to false, with no UI anywhere that sets it — an admin is made in a seeder or directly in the database. There is no role concept and no permissions package.
-- Blocking is recorded as a nullable timestamp rather than a boolean, so "blocked" and "blocked when" are the same fact. Unblocking clears it.
+- Blocking is recorded as a boolean on the user, defaulting to false. Unblocking clears it. The app records _that_ someone is blocked, not _when_ — a moderation timeline is an audit log, which is out of scope.
 - Admin screens live under an admin URL prefix behind a single gate: admin. A signed-in non-admin gets a 404, not a 403 — a 403 confirms the panel exists. A signed-out visitor gets the same 404, not a login redirect, which would confirm it just as loudly. Email verification is not a gate here; the admin check subsumes it, since admin is granted out-of-band.
 - The admin section has its own Inertia layout — a navigation shell with links to users, contributions, and (once specified) withdrawals — but reuses the app's Persian RTL direction, typography, and colour language rather than introducing a second visual system.
 - Blocked users are refused during authentication with a dedicated Persian message distinct from the invalid-credentials message, and their sessions are invalidated at the moment of blocking.

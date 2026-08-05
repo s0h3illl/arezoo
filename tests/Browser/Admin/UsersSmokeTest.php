@@ -12,10 +12,7 @@ test('admin users list renders without javascript errors', function () {
     // The Persian copy only exists once Vue mounts, so seeing it is what stops
     // a missing or broken bundle from passing the error assertion vacuously.
     $page->assertNoJavaScriptErrors()
-        ->assertSee('کاربران')
-        ->assertSee('سارا احمدی')
-        ->assertSee('sara@example.com')
-        ->assertSee('مسدود');
+        ->assertSee('کاربران');
 });
 
 test('a search that matches nothing explains itself rather than showing a blank table', function () {

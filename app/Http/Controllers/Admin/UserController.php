@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -32,6 +34,30 @@ class UserController extends Controller
                 'search' => $search,
             ],
         ]);
+    }
+
+    /**
+     * Block or unblock the user, or update who they are.
+     *
+     * `is_blocked` is assigned rather than filled: barring someone from the app
+     * is a moderation decision, not an attribute of theirs a form may carry in.
+     */
+    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    {
+        if ($request->isBlockAction()) {
+            $user->is_blocked = $request->boolean('is_blocked');
+        } else {
+            $user->fill($request->safe()->only(['name', 'email']));
+
+            /* An address nobody has proven is an unverified address, however it changed. */
+            if ($user->isDirty('email')) {
+                $user->email_verified_at = null;
+            }
+        }
+
+        $user->save();
+
+        return back();
     }
 
     /**

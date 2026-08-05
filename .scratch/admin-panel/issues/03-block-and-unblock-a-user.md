@@ -8,13 +8,13 @@ Note that hiding a blocked user's content from other users is deliberately **not
 
 **Status:** ready-for-agent
 
-- [ ] An admin can block a user from the list or their row, after a confirmation step
-- [ ] Blocking records when it happened, not merely that it happened
-- [ ] A blocked user attempting to sign in is refused with a Persian message distinct from the invalid-credentials message
-- [ ] A blocked user's existing session stops working at the moment of blocking — they do not stay signed in until their session expires
-- [ ] An admin can unblock a user, after a confirmation step, and that user can sign in again
-- [ ] The list and the user's row show when they were blocked
-- [ ] Blocking and unblocking leave the user's contributions, the wishes they own, and every received total untouched
-- [ ] A factory state produces a blocked user
-- [ ] Only an admin can block or unblock; a non-admin attempting it gets a 404
-- [ ] Pint clean, larastan clean
+- [x] An admin can block a user from the list or their row, after a confirmation step
+- [ ] ~~Blocking records when it happened, not merely that it happened~~ — **dropped:** blocked state stays the `is_blocked` boolean that landed with 02. Recording the moment of a moderation decision belongs to an audit log, which the spec puts out of scope.
+- [x] A blocked user attempting to sign in is refused with a Persian message distinct from the invalid-credentials message
+- [x] A blocked user's existing session stops working at the moment of blocking — they do not stay signed in until their session expires
+- [x] An admin can unblock a user, after a confirmation step, and that user can sign in again
+- [ ] ~~The list and the user's row show when they were blocked~~ — **amended:** the row shows _that_ they are blocked, which 02 already built. There is no timestamp to show.
+- [x] Blocking and unblocking leave the user's contributions, the wishes they own, and every received total untouched
+- [x] A factory state produces a blocked user
+- [x] Only an admin can block or unblock; a non-admin attempting it gets a 404
+- [x] Pint clean, larastan clean

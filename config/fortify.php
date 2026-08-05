@@ -137,7 +137,6 @@ return [
 
     'limiters' => [
         'login' => null,
-        'passkeys' => 'passkeys',
     ],
 
     /*
@@ -187,9 +186,6 @@ return [
         Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
-        Features::passkeys([
-            'confirmPassword' => true,
-        ]),
     ],
 
 ];

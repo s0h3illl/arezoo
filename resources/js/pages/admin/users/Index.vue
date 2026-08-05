@@ -4,7 +4,7 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { index } from '@/routes/admin/users';
+import { index, update } from '@/routes/admin/users';
 import type { Paginated } from '@/types';
 
 defineOptions({ layout: AdminLayout });
@@ -47,6 +47,38 @@ watch(search, () => {
 });
 
 onBeforeUnmount(() => clearTimeout(debounceTimer));
+
+/**
+ * What clicking the badge would do — a blocked user's badge reads as a state,
+ * so the label it cannot show goes on the button itself.
+ */
+function blockActionLabel(user: UserRow): string {
+    return user.is_blocked
+        ? `رفع مسدودی ${user.name}`
+        : `مسدود کردن ${user.name}`;
+}
+
+/**
+ * Block or unblock the user behind the badge.
+ *
+ * The browser's own dialog is the confirmation step for now — blocking reaches a
+ * real person, so it is never one click. A designed modal replaces this later.
+ */
+function toggleBlock(user: UserRow): void {
+    const question = user.is_blocked
+        ? `مسدودی ${user.name} برداشته بشه؟`
+        : `${user.name} مسدود بشه؟ از این به بعد نمی‌تونه وارد بشه.`;
+
+    if (!window.confirm(question)) {
+        return;
+    }
+
+    router.patch(
+        update.url(user.id),
+        { action: 'block', is_blocked: !user.is_blocked },
+        { preserveScroll: true, preserveState: true },
+    );
+}
 
 /** Persian digits, so the table does not read half in one script and half in another. */
 function toPersianDigits(value: number): string {
@@ -134,17 +166,29 @@ function toPersianDigits(value: number): string {
                                 </td>
                                 <!--
                                     Only the blocked state gets a word. `CONTEXT.md`
-                                    names no opposite of Blocked, and inventing one
-                                    would harden a status the domain does not have.
+                                    names no opposite of Blocked, so a user who is
+                                    not blocked shows the action instead of a
+                                    status the domain does not have.
                                 -->
                                 <td class="px-5 py-4">
-                                    <span
-                                        v-if="user.is_blocked"
-                                        class="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
+                                    <button
+                                        type="button"
+                                        :title="blockActionLabel(user)"
+                                        :aria-label="blockActionLabel(user)"
+                                        :class="[
+                                            'inline-flex rounded-full px-2.5 py-1 text-xs font-bold transition-colors focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none',
+                                            user.is_blocked
+                                                ? 'bg-red-50 text-red-700 hover:bg-red-100'
+                                                : 'text-slate-400 hover:bg-slate-100 hover:text-slate-700',
+                                        ]"
+                                        @click="toggleBlock(user)"
                                     >
-                                        مسدود
-                                    </span>
-                                    <span v-else class="text-slate-300">—</span>
+                                        {{
+                                            user.is_blocked
+                                                ? 'مسدود'
+                                                : 'مسدود کردن'
+                                        }}
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
