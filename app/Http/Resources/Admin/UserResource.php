@@ -8,8 +8,12 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Carbon;
 
 /**
- * The one row the admin users list renders, mirrored by `AdminUserRow` in
- * `resources/js/types/user.ts`.
+ * A user as the admin panel reads them — one row of the list, and the whole of
+ * the detail view.
+ *
+ * One resource serves both screens rather than one per screen. Each takes what
+ * it needs: the list renders a row of name, email, verified state, and blocked
+ * state, and leaves the registration date the detail view shows unread.
  *
  * @mixin User
  */
@@ -33,7 +37,7 @@ class UserResource extends JsonResource
      * Deliberately narrow: the panel is admin-only, so this is not a leak, but a
      * column added to `users` later should not silently ride along to the frontend.
      *
-     * @return array{id: int, name: string, email: string, email_verified_at: ?Carbon, is_blocked: bool}
+     * @return array{id: int, name: string, email: string, email_verified_at: ?Carbon, is_blocked: bool, created_at: ?Carbon}
      */
     public function toArray(Request $request): array
     {
@@ -43,6 +47,7 @@ class UserResource extends JsonResource
             'email' => $this->email,
             'email_verified_at' => $this->email_verified_at,
             'is_blocked' => $this->is_blocked,
+            'created_at' => $this->created_at,
         ];
     }
 }

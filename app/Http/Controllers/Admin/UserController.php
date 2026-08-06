@@ -36,6 +36,16 @@ class UserController extends Controller
     }
 
     /**
+     * Show one user in full, so judging a report does not take a query.
+     */
+    public function show(User $user): Response
+    {
+        return Inertia::render('admin/users/Show', [
+            'user' => new UserResource($user),
+        ]);
+    }
+
+    /**
      * Block or unblock the user, or update who they are.
      *
      * `is_blocked` is assigned rather than filled: barring someone from the app

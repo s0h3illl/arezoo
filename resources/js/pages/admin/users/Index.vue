@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { onBeforeUnmount, ref, watch } from 'vue';
 
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { index, update } from '@/routes/admin/users';
+import { index, show, update } from '@/routes/admin/users';
 import type { Paginated, User } from '@/types';
 
 defineOptions({ layout: AdminLayout });
@@ -13,9 +13,11 @@ defineOptions({ layout: AdminLayout });
  * One row of the list, mirroring `App\Http\Resources\Admin\UserResource`.
  *
  * Derived from `User` rather than written out again: a field that changes shape
- * cannot come to mean one thing here and another everywhere else.
+ * cannot come to mean one thing here and another everywhere else. `created_at`
+ * arrives with the rest — the resource also feeds the detail view — and this
+ * screen deliberately leaves it unread.
  */
-type AdminUserRow = Omit<User, 'is_admin' | 'created_at' | 'updated_at'>;
+type AdminUserRow = Omit<User, 'is_admin' | 'updated_at'>;
 
 const props = defineProps<{
     users: Paginated<AdminUserRow>;
@@ -136,8 +138,13 @@ function toggleBlock(user: AdminUserRow): void {
 
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="user in users.data" :key="user.id">
-                                <td class="px-5 py-4 font-bold text-slate-900">
-                                    {{ user.name }}
+                                <td class="px-5 py-4">
+                                    <Link
+                                        :href="show.url(user.id)"
+                                        class="font-bold text-slate-900 underline-offset-4 hover:underline"
+                                    >
+                                        {{ user.name }}
+                                    </Link>
                                 </td>
                                 <td
                                     dir="ltr"

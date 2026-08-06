@@ -98,18 +98,21 @@ test('a row shows the name, email, verified state, and blocked state', function 
 });
 
 /*
-| Not a leak — the panel is admin-only. It is a promise that the row shape is
-| deliberate, so a column added to `users` later does not silently start riding
-| along to the frontend.
+| Not a leak — the panel is admin-only. It is a promise that the serialised shape
+| is deliberate, so a column added to `users` later does not silently start
+| riding along to the frontend.
+|
+| `created_at` is here for the detail view, which shows a registration date the
+| list does not; one resource serves both screens, and each reads what it needs.
 */
-test('a row carries nothing beyond what the list shows', function () {
+test('a user carries nothing beyond what the panel serialises', function () {
     $this->actingAs(User::factory()->admin()->create());
 
     $this->get(route('admin.users.index'))->assertInertia(
         fn (AssertableInertia $page) => $page->has(
             'users.data.0',
             fn (AssertableInertia $row) => $row
-                ->hasAll('id', 'name', 'email', 'email_verified_at', 'is_blocked')
+                ->hasAll('id', 'name', 'email', 'email_verified_at', 'is_blocked', 'created_at')
         )
     );
 });

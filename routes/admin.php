@@ -15,5 +15,5 @@ Route::middleware(EnsureUserIsAdmin::class)
     ->name('admin.')
     ->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');
-        Route::resource('users', UserController::class)->only(['index', 'update']);
+        Route::resource('users', UserController::class)->only(['index', 'show', 'update']);
     });
