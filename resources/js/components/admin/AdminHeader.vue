@@ -8,6 +8,7 @@ import HomeIcon from '@/components/icons/HomeIcon.vue';
 import MenuIcon from '@/components/icons/MenuIcon.vue';
 import { home } from '@/routes';
 import { dashboard } from '@/routes/admin';
+import contributions from '@/routes/admin/contributions';
 import users from '@/routes/admin/users';
 
 const page = usePage();
@@ -15,13 +16,13 @@ const page = usePage();
 const isMenuOpen = ref(false);
 
 /**
- * Sections beyond the dashboard are not built yet, so they hold '#' until each
- * one gets a route.
+ * Sections beyond these are not built yet, so they hold '#' until each one
+ * gets a route.
  */
 const navItems = computed(() => [
     { label: 'داشبورد', href: dashboard().url },
     { label: 'کاربران', href: users.index().url },
-    { label: 'مشارکت‌ها', href: '#' },
+    { label: 'مشارکت‌ها', href: contributions.index().url },
     { label: 'برداشت‌ها', href: '#' },
     { label: 'تنظیمات', href: '#' },
 ]);

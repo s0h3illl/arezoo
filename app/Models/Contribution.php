@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $message
  * @property ContributionVisibility $visibility
  * @property ContributionStatus $status
+ * @property Carbon|null $settled_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Wish $wish
@@ -49,6 +50,7 @@ class Contribution extends Model
             'amount' => 'integer',
             'visibility' => ContributionVisibility::class,
             'status' => ContributionStatus::class,
+            'settled_at' => 'datetime',
         ];
     }
 
@@ -95,8 +97,10 @@ class Contribution extends Model
     /**
      * Count this contribution towards its wish, on the gateway's word.
      *
-     * The contribution and its payment move together so a crash can never
-     * leave one settled without the other.
+     * The contribution, its payment, and its settlement time move together so
+     * a crash can never leave one settled without the others. `created_at`
+     * marks when the gateway attempt began, not when it verified, which is
+     * why settlement needs a timestamp of its own (ADR-0005).
      */
     public function markPaid(string $referenceId): void
     {
@@ -106,7 +110,10 @@ class Contribution extends Model
                 'status' => PaymentStatus::Verified,
             ]);
 
-            $this->update(['status' => ContributionStatus::Paid]);
+            $this->update([
+                'status' => ContributionStatus::Paid,
+                'settled_at' => now(),
+            ]);
         });
     }
 

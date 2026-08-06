@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ContributionController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserPasswordController;
@@ -19,4 +20,5 @@ Route::middleware(EnsureUserIsAdmin::class)
         Route::resource('users', UserController::class)->only(['index', 'show', 'update']);
         Route::put('users/{user}/password', [UserPasswordController::class, 'update'])
             ->name('users.password.update');
+        Route::resource('contributions', ContributionController::class)->only(['index']);
     });

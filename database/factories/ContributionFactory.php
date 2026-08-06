@@ -8,6 +8,7 @@ use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Wish;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -59,6 +60,21 @@ class ContributionFactory extends Factory
                 'amount' => $attributes['amount'],
             ]),
             'status' => ContributionStatus::Paid,
+            'settled_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate that the money landed at a specific moment.
+     *
+     * Lets a test place a contribution on either side of a time boundary —
+     * the held/available boundary in ADR-0006, for instance — rather than
+     * only ever settling "now".
+     */
+    public function settledAt(DateTimeInterface $when): static
+    {
+        return $this->paid()->state([
+            'settled_at' => $when,
         ]);
     }
 }

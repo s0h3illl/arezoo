@@ -25,6 +25,7 @@ return new class extends Migration
             $table->text('message')->nullable();
             $table->string('visibility')->default(ContributionVisibility::Public->value);
             $table->string('status')->default(ContributionStatus::Pending->value);
+            $table->timestamp('settled_at')->nullable();
             $table->timestamps();
 
             $table->index(['wish_id', 'status']);
