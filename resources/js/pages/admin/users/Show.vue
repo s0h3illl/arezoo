@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
+import SubmitButton from '@/components/SubmitButton.vue';
+import TextField from '@/components/TextField.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { index, update } from '@/routes/admin/users';
+import { update as updatePassword } from '@/routes/admin/users/password';
 import type { User } from '@/types';
 
 defineOptions({ layout: AdminLayout });
@@ -60,6 +63,37 @@ function toggleBlock(): void {
         { action: 'block', is_blocked: !props.user.is_blocked },
         { preserveScroll: true },
     );
+}
+
+const passwordForm = useForm({
+    password: '',
+    password_confirmation: '',
+});
+
+/**
+ * Set a new password for this user, after a confirmation step.
+ *
+ * The way back in for someone who has lost access to their email. The
+ * dialog names the concrete consequence — the old password stops working —
+ * rather than the session machinery behind it, mirroring the block dialog's
+ * plain-language style.
+ */
+function submitPassword(): void {
+    if (
+        !window.confirm(
+            `برای ${props.user.name} رمز عبور تازه تنظیم بشه؟ با رمز قبلی‌ش دیگه نمی‌تونه وارد بشه.`,
+        )
+    ) {
+        return;
+    }
+
+    // Reset only on success, unlike the public reset-password form: a
+    // rejected password stays on screen so the admin can see and fix it,
+    // rather than retyping it blind for someone who isn't present to help.
+    passwordForm.put(updatePassword.url(props.user.id), {
+        preserveScroll: true,
+        onSuccess: () => passwordForm.reset(),
+    });
 }
 </script>
 
@@ -170,6 +204,57 @@ function toggleBlock(): void {
                     </dd>
                 </div>
             </dl>
+
+            <!--
+                For a user who has lost access to their email and therefore
+                cannot use the password-reset flow themselves.
+            -->
+            <div
+                class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)]"
+            >
+                <h2 class="text-lg font-black text-slate-900">
+                    تنظیم رمز عبور جدید
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    برای کاربری که به ایمیلش دسترسی نداره و نمی‌تونه از مسیر
+                    بازیابی رمز عبور استفاده کنه.
+                </p>
+
+                <form
+                    novalidate
+                    class="mt-4 flex flex-col gap-4"
+                    @submit.prevent="submitPassword"
+                >
+                    <TextField
+                        id="password"
+                        v-model="passwordForm.password"
+                        label="رمز عبور جدید"
+                        type="password"
+                        dir="ltr"
+                        autocomplete="new-password"
+                        :error="passwordForm.errors.password"
+                    />
+
+                    <!--
+                        No `error` passed here: Laravel's `confirmed` rule
+                        always reports a mismatch on `password`, never on
+                        `password_confirmation`, so the message renders above
+                        and this field carries no error state of its own.
+                    -->
+                    <TextField
+                        id="password_confirmation"
+                        v-model="passwordForm.password_confirmation"
+                        label="تکرار رمز عبور جدید"
+                        type="password"
+                        dir="ltr"
+                        autocomplete="new-password"
+                    />
+
+                    <SubmitButton :processing="passwordForm.processing">
+                        تنظیم رمز عبور
+                    </SubmitButton>
+                </form>
+            </div>
         </div>
     </main>
 </template>

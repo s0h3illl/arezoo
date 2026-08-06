@@ -31,6 +31,21 @@ test('a blocked user reads as blocked, and the button offers to undo it', functi
 });
 
 /*
+| The way in for someone locked out of their email — it has to be on the
+| screen, not just reachable by an admin who already knows the route exists.
+*/
+test('the detail view offers a way to set a new password', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $user = User::factory()->create(['name' => 'سارا احمدی']);
+
+    $page = visit(route('admin.users.show', $user, absolute: false));
+
+    $page->assertNoJavaScriptErrors()
+        ->assertSee('رمز عبور جدید')
+        ->assertSee('تنظیم رمز عبور');
+});
+
+/*
 | The way into this screen is a user's name in the list. A detail view nothing
 | links to is a URL an admin has to already know.
 */

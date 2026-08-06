@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserPasswordController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,6 @@ Route::middleware(EnsureUserIsAdmin::class)
     ->group(function (): void {
         Route::get('/', DashboardController::class)->name('dashboard');
         Route::resource('users', UserController::class)->only(['index', 'show', 'update']);
+        Route::put('users/{user}/password', [UserPasswordController::class, 'update'])
+            ->name('users.password.update');
     });
