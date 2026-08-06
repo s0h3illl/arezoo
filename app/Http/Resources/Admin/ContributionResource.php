@@ -31,7 +31,7 @@ class ContributionResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: int, wish: array{id: int, title: string}, contributor: array{id: int, name: string}, amount: int, status: ContributionStatus, settled_at: ?Carbon}
+     * @return array{id: int, wish: array{id: int, title: string}, contributor: array{id: int, name: string}, amount: int, status: ContributionStatus, settled_at: ?Carbon, payment: array{id: int, transaction_id: ?string, reference_id: ?string}}
      */
     public function toArray(Request $request): array
     {
@@ -48,6 +48,17 @@ class ContributionResource extends JsonResource
             'amount' => $this->amount,
             'status' => $this->status,
             'settled_at' => $this->settled_at,
+            /*
+             * The gateway attempt behind the money — both identifiers, so a row
+             * here can be matched against the gateway's own dashboard. Never
+             * null: a contribution whose payment failed no longer exists
+             * (ADR-0001), so the two are only ever seen together.
+             */
+            'payment' => [
+                'id' => $this->payment->id,
+                'transaction_id' => $this->payment->transaction_id,
+                'reference_id' => $this->payment->reference_id,
+            ],
         ];
     }
 }

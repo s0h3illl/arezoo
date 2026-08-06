@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/vue3';
 
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import { formatMoment, formatToman } from '@/lib/format';
 import type { Contribution, ContributionStatus, Paginated } from '@/types';
 
 defineOptions({ layout: AdminLayout });
@@ -20,37 +21,13 @@ const statusBadgeClasses: Record<ContributionStatus, string> = {
     paid: 'bg-emerald-50 text-emerald-700',
     pending: 'bg-amber-50 text-amber-700',
 };
-
-const amountFormatter = new Intl.NumberFormat('fa-IR');
-
-/** Every amount in this panel is Toman (ADR-0002). */
-function formatAmount(amount: number): string {
-    return `${amountFormatter.format(amount)} تومان`;
-}
-
-/**
- * `fa-IR` gives the Jalali calendar the reader actually keeps, and it comes
- * with the browser — a date library would be a dependency for one line. The
- * machine-readable original stays on the `<time>` element beside it.
- */
-const settledAtFormatter = new Intl.DateTimeFormat('fa-IR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-});
-
-function formatSettledAt(settledAt: string): string {
-    return settledAtFormatter.format(new Date(settledAt));
-}
 </script>
 
 <template>
     <main class="flex-1 px-5 py-8 sm:px-8 sm:py-12">
         <Head title="مشارکت‌ها | پنل مدیریت" />
 
-        <div class="mx-auto w-full max-w-5xl">
+        <div class="mx-auto w-full max-w-6xl">
             <h1 class="text-2xl font-black text-slate-900 sm:text-3xl">
                 مشارکت‌ها
             </h1>
@@ -65,7 +42,7 @@ function formatSettledAt(settledAt: string): string {
                     v-if="contributions.data.length > 0"
                     class="overflow-x-auto"
                 >
-                    <table class="w-full min-w-[720px] text-right text-sm">
+                    <table class="w-full min-w-[900px] text-right text-sm">
                         <thead
                             class="border-b border-slate-200 bg-slate-50 text-[13px] text-slate-500"
                         >
@@ -85,6 +62,16 @@ function formatSettledAt(settledAt: string): string {
                                 <th scope="col" class="px-5 py-3 font-bold">
                                     زمان تسویه
                                 </th>
+                                <!--
+                                    The gateway attempt behind the money: its
+                                    transaction identifier, with the reference
+                                    the gateway handed back beneath it. Both, so
+                                    a row here can be matched against the
+                                    gateway's own dashboard.
+                                -->
+                                <th scope="col" class="px-5 py-3 font-bold">
+                                    پرداخت
+                                </th>
                             </tr>
                         </thead>
 
@@ -103,7 +90,7 @@ function formatSettledAt(settledAt: string): string {
                                     dir="ltr"
                                     class="px-5 py-4 text-left text-slate-600"
                                 >
-                                    {{ formatAmount(contribution.amount) }}
+                                    {{ formatToman(contribution.amount) }}
                                 </td>
                                 <td class="px-5 py-4">
                                     <span
@@ -123,13 +110,29 @@ function formatSettledAt(settledAt: string): string {
                                         :datetime="contribution.settled_at"
                                     >
                                         {{
-                                            formatSettledAt(
+                                            formatMoment(
                                                 contribution.settled_at,
                                             )
                                         }}
                                     </time>
                                     <span v-else class="text-slate-400">
                                         هنوز تسویه نشده
+                                    </span>
+                                </td>
+                                <td dir="ltr" class="px-5 py-4 text-left">
+                                    <span class="font-bold text-slate-900">
+                                        {{
+                                            contribution.payment
+                                                .transaction_id ?? '—'
+                                        }}
+                                    </span>
+                                    <span
+                                        class="mt-1 block text-[13px] text-slate-500"
+                                    >
+                                        {{
+                                            contribution.payment.reference_id ??
+                                            '—'
+                                        }}
                                     </span>
                                 </td>
                             </tr>

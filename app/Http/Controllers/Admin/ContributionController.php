@@ -17,7 +17,7 @@ class ContributionController extends Controller
     public function index(): Response
     {
         $contributions = Contribution::query()
-            ->with(['wish', 'contributor'])
+            ->with(['wish', 'contributor', 'payment'])
             ->orderByDesc('id')
             ->paginate(20);
 

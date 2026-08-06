@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ContributionController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserPasswordController;
 use App\Http\Middleware\EnsureUserIsAdmin;
@@ -21,4 +22,5 @@ Route::middleware(EnsureUserIsAdmin::class)
         Route::put('users/{user}/password', [UserPasswordController::class, 'update'])
             ->name('users.password.update');
         Route::resource('contributions', ContributionController::class)->only(['index']);
+        Route::resource('payments', PaymentController::class)->only(['index']);
     });

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\PaymentStatus;
 use Database\Factories\PaymentFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -39,6 +41,24 @@ class Payment extends Model
     public function contribution(): HasOne
     {
         return $this->hasOne(Contribution::class);
+    }
+
+    /**
+     * Scope a query to attempts whose transaction identifier contains the term.
+     *
+     * The transaction identifier is the one thing a user who paid and saw
+     * nothing happen has to hand, so it is the only thing matched. Wildcards in
+     * the term are escaped — a search for `100%` looks for that text — which
+     * needs an explicit ESCAPE clause, since SQLite assumes no escape character.
+     *
+     * @param  Builder<Payment>  $query
+     */
+    #[Scope]
+    protected function matching(Builder $query, string $term): void
+    {
+        $contains = '%'.addcslashes($term, '%_\\').'%';
+
+        $query->whereRaw('transaction_id like ? escape ?', [$contains, '\\']);
     }
 
     /**

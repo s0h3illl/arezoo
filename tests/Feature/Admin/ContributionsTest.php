@@ -67,6 +67,22 @@ test('a contribution still shows its contributor to the admin, whatever its visi
 ]);
 
 /*
+| Both identifiers, so a row here can be matched against the gateway's own
+| dashboard without a second lookup.
+*/
+test('a contribution shows the gateway attempt behind it', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $contribution = Contribution::factory()->paid()->create();
+
+    $this->get(route('admin.contributions.index'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('contributions.data.0.payment.id', $contribution->payment->id)
+            ->where('contributions.data.0.payment.transaction_id', $contribution->payment->transaction_id)
+            ->where('contributions.data.0.payment.reference_id', $contribution->payment->reference_id)
+    );
+});
+
+/*
 | A 403 would confirm the section exists, and a login redirect would too. Everyone
 | who isn't an admin gets the answer a made-up URL would give.
 */

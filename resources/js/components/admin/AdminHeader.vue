@@ -9,6 +9,7 @@ import MenuIcon from '@/components/icons/MenuIcon.vue';
 import { home } from '@/routes';
 import { dashboard } from '@/routes/admin';
 import contributions from '@/routes/admin/contributions';
+import payments from '@/routes/admin/payments';
 import users from '@/routes/admin/users';
 
 const page = usePage();
@@ -23,6 +24,7 @@ const navItems = computed(() => [
     { label: 'داشبورد', href: dashboard().url },
     { label: 'کاربران', href: users.index().url },
     { label: 'مشارکت‌ها', href: contributions.index().url },
+    { label: 'پرداخت‌ها', href: payments.index().url },
     { label: 'برداشت‌ها', href: '#' },
     { label: 'تنظیمات', href: '#' },
 ]);

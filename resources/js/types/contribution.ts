@@ -19,4 +19,14 @@ export type Contribution = {
     amount: number;
     status: ContributionStatus;
     settled_at: string | null;
+    /*
+     * Never null: a contribution whose gateway attempt failed no longer exists
+     * (ADR-0001), so a contribution always has a payment behind it. Attempts
+     * with no contribution live on the payments screen instead.
+     */
+    payment: {
+        id: number;
+        transaction_id: string | null;
+        reference_id: string | null;
+    };
 };
