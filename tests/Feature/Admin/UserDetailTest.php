@@ -37,6 +37,16 @@ test('a guest gets a 404', function () {
     $this->get(route('admin.users.show', User::factory()->create()))->assertNotFound();
 });
 
+/*
+| An admin is not a user the panel manages, so their detail view answers exactly
+| as a made-up identifier would — the same answer the section gives a stranger.
+*/
+test('an admin is a 404, even to another admin', function () {
+    $this->actingAs(User::factory()->admin()->create());
+
+    $this->get(route('admin.users.show', User::factory()->admin()->create()))->assertNotFound();
+});
+
 test('a user who does not exist is a 404', function () {
     $this->actingAs(User::factory()->admin()->create());
 

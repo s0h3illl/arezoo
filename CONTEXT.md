@@ -45,7 +45,7 @@ An owner's request to take money out of their balance to their bank account. A w
 _Avoid_: Payout, settlement, transaction
 
 **Admin**:
-A user who can see every user, contribution, and withdrawal, and who decides whether a withdrawal is paid. Not a role anyone can reach by signing up.
+A user who can see every user other than an admin, every contribution and withdrawal, and who decides whether a withdrawal is paid. Not a role anyone can reach by signing up, and not one the panel manages: a staff account is created, blocked, or given a password out of band.
 
 **Blocked**:
 A user an admin has barred from the app. A blocked user cannot sign in, and nothing of theirs is reachable by anyone else. Blocking never touches their money.

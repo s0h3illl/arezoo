@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Inertia\ExceptionResponse;
@@ -27,6 +29,23 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureErrorPage();
+        $this->configureRouteBindings();
+    }
+
+    /**
+     * Resolve the user route parameter to one of the platform's users.
+     *
+     * An admin resolves to nothing, so every route that takes a user answers
+     * 404 for an admin without any of them having to remember to check. The
+     * binding is global on purpose, and so is the loss of panel control over
+     * staff accounts that comes with it — see ADR-0008.
+     */
+    protected function configureRouteBindings(): void
+    {
+        Route::bind('user', fn (string $value): User => User::query()
+            ->excludingAdmins()
+            ->whereKey($value)
+            ->firstOrFail());
     }
 
     /**

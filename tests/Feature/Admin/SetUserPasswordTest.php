@@ -95,6 +95,22 @@ test('setting a password on a blocked user does not unblock them', function () {
 });
 
 /*
+| The panel cannot be used to take over another operator's account: an admin
+| target is a 404 here as it is everywhere else in the section — see ADR-0008.
+*/
+test("an admin's password cannot be set from the panel", function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $otherAdmin = User::factory()->admin()->create();
+
+    $this->put(route('admin.users.password.update', $otherAdmin), [
+        'password' => 'a-new-strong-password',
+        'password_confirmation' => 'a-new-strong-password',
+    ])->assertNotFound();
+
+    expect(Hash::check('a-new-strong-password', $otherAdmin->fresh()->password))->toBeFalse();
+});
+
+/*
 | The gate on this action is the same 404 that fronts the rest of the admin
 | section — a non-admin gets no hint that a password-setting endpoint exists.
 */

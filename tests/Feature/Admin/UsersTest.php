@@ -3,8 +3,13 @@
 use App\Models\User;
 use Inertia\Testing\AssertableInertia;
 
-test('an admin sees every user', function () {
+/*
+| The list is the platform's users, which an admin is not one of. Staff accounts
+| are managed out of band, the same way admin status is granted out of band.
+*/
+test('an admin sees every user other than an admin', function () {
     $this->actingAs(User::factory()->admin()->create(['name' => 'مدیر']));
+    User::factory()->admin()->create(['name' => 'ناظر']);
     User::factory()->create(['name' => 'سارا']);
     User::factory()->unverified()->create(['name' => 'رضا']);
     User::factory()->blocked()->create(['name' => 'مریم']);
@@ -14,13 +19,42 @@ test('an admin sees every user', function () {
     $response->assertOk()->assertInertia(
         fn (AssertableInertia $page) => $page
             ->component('admin/users/Index')
-            ->has('users.data', 4)
+            ->has('users.data', 3)
+            ->where('users.meta.total', 3)
+    );
+});
+
+test('an admin is unfindable by a search for their name or email', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    User::factory()->admin()->create(['name' => 'ناظر', 'email' => 'nazer@example.com']);
+
+    $this->get(route('admin.users.index', ['search' => 'ناظر']))->assertInertia(
+        fn (AssertableInertia $page) => $page->has('users.data', 0)
+    );
+
+    $this->get(route('admin.users.index', ['search' => 'nazer@example.com']))->assertInertia(
+        fn (AssertableInertia $page) => $page->has('users.data', 0)
+    );
+});
+
+/*
+| Blocking is a moderation decision, not a deletion, so a blocked user is still
+| one of the platform's users and still counted.
+*/
+test('the total counts every user who is not an admin, blocked ones included', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    User::factory()->admin()->create();
+    User::factory()->create();
+    User::factory()->blocked()->create();
+
+    $this->get(route('admin.users.index'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('users.meta.total', 2)
     );
 });
 
 test('the list is paginated', function () {
     $this->actingAs(User::factory()->admin()->create());
-    User::factory()->count(24)->create();
+    User::factory()->count(25)->create();
 
     $this->get(route('admin.users.index'))->assertInertia(
         fn (AssertableInertia $page) => $page
@@ -107,6 +141,7 @@ test('a row shows the name, email, verified state, and blocked state', function 
 */
 test('a user carries nothing beyond what the panel serialises', function () {
     $this->actingAs(User::factory()->admin()->create());
+    User::factory()->create();
 
     $this->get(route('admin.users.index'))->assertInertia(
         fn (AssertableInertia $page) => $page->has(

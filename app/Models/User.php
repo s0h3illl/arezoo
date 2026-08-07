@@ -45,6 +45,20 @@ class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
+     * Scope a query to the platform's users, leaving out the admins.
+     *
+     * An admin is staff, not one of the people the platform serves, and is not
+     * managed from the panel at all — see ADR-0008.
+     *
+     * @param  Builder<User>  $query
+     */
+    #[Scope]
+    protected function excludingAdmins(Builder $query): void
+    {
+        $query->where('is_admin', false);
+    }
+
+    /**
      * Scope a query to users whose name or email contains the given term.
      *
      * Name and email are the two things an admin actually knows about a person,

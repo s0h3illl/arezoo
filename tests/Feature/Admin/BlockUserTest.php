@@ -60,6 +60,51 @@ test('an update that is not a block leaves the block state alone', function () {
 });
 
 /*
+| No admin can be blocked through the panel by any means, a crafted request from
+| someone who knows the identifier included — see ADR-0008.
+*/
+test('an admin cannot be blocked', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $otherAdmin = User::factory()->admin()->create();
+
+    $this->patch(route('admin.users.update', $otherAdmin), [
+        'action' => 'block',
+        'is_blocked' => true,
+    ])->assertNotFound();
+
+    expect($otherAdmin->fresh()->is_blocked)->toBeFalse();
+});
+
+test('an admin who is blocked cannot be unblocked either', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $otherAdmin = User::factory()->admin()->blocked()->create();
+
+    $this->patch(route('admin.users.update', $otherAdmin), [
+        'action' => 'block',
+        'is_blocked' => false,
+    ])->assertNotFound();
+
+    expect($otherAdmin->fresh()->is_blocked)->toBeTrue();
+});
+
+test("an admin's name and email cannot be edited", function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $otherAdmin = User::factory()->admin()->create([
+        'name' => 'ناظر',
+        'email' => 'nazer@example.com',
+    ]);
+
+    $this->patch(route('admin.users.update', $otherAdmin), [
+        'name' => 'سارا احمدی',
+        'email' => 'sara@example.com',
+    ])->assertNotFound();
+
+    expect($otherAdmin->fresh())
+        ->name->toBe('ناظر')
+        ->email->toBe('nazer@example.com');
+});
+
+/*
 | Blocking is the one destructive thing the panel can do to a person, so the gate
 | in front of it gets the same 404 treatment as the section it lives in.
 */

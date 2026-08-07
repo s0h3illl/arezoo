@@ -15,13 +15,14 @@ use Inertia\Response;
 class UserController extends Controller
 {
     /**
-     * List every user on the platform.
+     * List every user on the platform, other than the admins.
      */
     public function index(Request $request): Response
     {
         $search = trim((string) $request->query('search', ''));
 
         $users = User::query()
+            ->excludingAdmins()
             ->when($search !== '', fn (Builder $query) => $query->matching($search))
             ->orderByDesc('id')
             ->paginate(20)
