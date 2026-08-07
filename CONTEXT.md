@@ -44,6 +44,10 @@ _Avoid_: Pending (which means the money isn't real yet — see Contribution)
 An owner's request to take money out of their balance to their bank account. A withdrawal is either awaiting a decision, paid, or rejected; it costs a fee, taken out of what the owner receives.
 _Avoid_: Payout, settlement, transaction
 
+**Raised**:
+The lifetime sum of every contribution whose money has landed, across the whole platform. It only grows: a withdrawal moves money out of one owner's Balance, and does not move this.
+_Avoid_: Balance (a Balance is what an owner may withdraw; this is what the platform has ever taken in, and never goes down)
+
 **Admin**:
 A user who can see every user other than an admin, every contribution and withdrawal, and who decides whether a withdrawal is paid. Not a role anyone can reach by signing up, and not one the panel manages: a staff account is created, blocked, or given a password out of band.
 

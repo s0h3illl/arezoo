@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 
+import DashboardTile from '@/components/admin/DashboardTile.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
+import { formatMoment, formatToman } from '@/lib/format';
+import type { DashboardSnapshot } from '@/types';
 
 defineOptions({ layout: AdminLayout });
+
+defineProps<{
+    snapshot: DashboardSnapshot;
+}>();
 </script>
 
 <template>
@@ -15,14 +22,29 @@ defineOptions({ layout: AdminLayout });
                 داشبورد
             </h1>
             <p class="mt-2 text-sm text-slate-500">
-                بقیه بخش‌ها به‌زودی اضافه می‌شن.
+                نمای کلی پلتفرم؛ حداکثر یک بار در روز به‌روزرسانی می‌شه.
             </p>
 
-            <div
-                class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)] sm:p-8"
-            >
-                <p class="text-lg font-semibold text-slate-900">سلام دنیا 👋</p>
-            </div>
+            <dl class="mt-6 grid gap-4 sm:grid-cols-3">
+                <DashboardTile label="کاربران">
+                    {{ snapshot.users_count }}
+                </DashboardTile>
+
+                <DashboardTile label="آرزوها">
+                    {{ snapshot.wishes_count }}
+                </DashboardTile>
+
+                <DashboardTile label="مجموع جمع‌آوری‌شده" accent="emerald">
+                    {{ formatToman(snapshot.raised_amount) }}
+                </DashboardTile>
+            </dl>
+
+            <p class="mt-4 text-xs text-slate-400">
+                محاسبه‌شده در
+                <time :datetime="snapshot.computed_at">{{
+                    formatMoment(snapshot.computed_at)
+                }}</time>
+            </p>
         </div>
     </main>
 </template>
