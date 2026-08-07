@@ -4,3 +4,4 @@ export * from './dashboard';
 export * from './pagination';
 export * from './payment';
 export * from './user';
+export * from './wish';

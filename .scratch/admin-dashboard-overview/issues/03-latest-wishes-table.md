@@ -14,16 +14,16 @@ Deliberately absent: how much each wish has raised. That figure is a per-wish ag
 
 **Status:** ready-for-agent
 
-- [ ] An admin sees the five most recently published wishes beneath the totals.
-- [ ] With more than five wishes, exactly five are shown — the newest.
-- [ ] The newest wish is first, and wishes created within the same moment still order predictably rather than arbitrarily.
-- [ ] Each row shows the wish's title, its owner's name, its price in Toman, and when it was published, using the app's existing money and moment formatting.
-- [ ] A wish belonging to a blocked user appears in the table.
-- [ ] With no wishes on the platform, the table is replaced by copy explaining why it is empty, in the style already used by the contributions list.
-- [ ] The table reflects a wish created since the totals were last calculated — it is read fresh on every visit, not part of the cached snapshot.
-- [ ] Listing the table does not run a query per row for the owner.
-- [ ] Rows are not links, and there is no pagination or "see all" control.
-- [ ] The wish rows are serialised through a narrow, deliberate shape rather than handing the model to the frontend, following the convention the other admin screens already set.
-- [ ] The frontend type for a wish lives with the other original domain types; the dashboard's own props shape stays local to the dashboard page.
-- [ ] The dashboard browser smoke test sees the table's Persian copy render without JavaScript errors.
-- [ ] Existing dashboard access tests still pass: a signed-in non-admin and a guest each get a 404.
+- [x] An admin sees the five most recently published wishes beneath the totals.
+- [x] With more than five wishes, exactly five are shown — the newest.
+- [x] The newest wish is first, and wishes created within the same moment still order predictably rather than arbitrarily.
+- [x] Each row shows the wish's title, its owner's name, its price in Toman, and when it was published, using the app's existing money and moment formatting.
+- [x] A wish belonging to a blocked user appears in the table.
+- [x] With no wishes on the platform, the table is replaced by copy explaining why it is empty, in the style already used by the contributions list.
+- [x] The table reflects a wish created since the totals were last calculated — it is read fresh on every visit, not part of the cached snapshot.
+- [x] Listing the table does not run a query per row for the owner.
+- [x] Rows are not links, and there is no pagination or "see all" control.
+- [x] The wish rows are serialised through a narrow, deliberate shape rather than handing the model to the frontend, following the convention the other admin screens already set.
+- [x] The frontend type for a wish lives with the other original domain types; the dashboard's own props shape stays local to the dashboard page.
+- [x] The dashboard browser smoke test sees the table's Persian copy render without JavaScript errors.
+- [x] Existing dashboard access tests still pass: a signed-in non-admin and a guest each get a 404.
