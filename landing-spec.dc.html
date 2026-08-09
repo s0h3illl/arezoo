@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f8fafc}
+a{color:#059669;text-decoration:none}
+a:hover{color:#047857}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:#f1f5f9;padding:2px 6px;border-radius:6px;color:#334155}
+table{width:100%;border-collapse:collapse;margin:12px 0}
+th{text-align:left;font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:#64748b;padding:8px 10px;border-bottom:2px solid #e2e8f0}
+td{font-size:13px;color:#334155;padding:9px 10px;border-bottom:1px solid #e2e8f0;vertical-align:top;line-height:1.6}
+h2{font-size:20px;font-weight:800;color:#0f172a;margin:44px 0 8px}
+h3{font-size:15px;font-weight:700;color:#0f172a;margin:24px 0 6px}
+p,li{font-size:14px;line-height:1.75;color:#475569}
+</style>
+</helmet>
+<div data-screen-label="Spec: Landing" style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;min-height:100vh;padding:clamp(24px,5vw,56px) 16px">
+  <div style="max-width:860px;margin:0 auto;background:#ffffff;border:1px solid #e2e8f0;border-radius:20px;padding:clamp(28px,5vw,56px)">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px">
+      <span style="background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;font-size:12px;font-weight:700;padding:4px 12px;border-radius:999px">Implementation Spec 1/3</span>
+      <nav style="display:flex;gap:14px;font-size:13px;font-weight:600">
+        <span style="color:#0f172a">Landing</span>
+        <a href="Spec - Login.dc.html">Login</a>
+        <a href="Spec - Profile.dc.html">Profile</a>
+      </nav>
+    </div>
+    <h1 style="font-size:clamp(26px,4vw,34px);font-weight:800;color:#0f172a;margin:0 0 6px">Arezoo — Landing Page</h1>
+    <p style="margin:0 0 4px">Marketing page for the Arezoo wishlist app. Persian, RTL, mobile-first, responsive to desktop. Live design: <a href="Landing.dc.html">Landing.dc.html</a></p>
+
+    <h2>1 · Global setup</h2>
+    <ul>
+      <li>Root: <code>&lt;html dir="rtl" lang="fa"&gt;</code>. All numerals are Persian (fa-IR digits).</li>
+      <li>Font: <strong>Vazirmatn</strong> (Google Fonts), weights 400 / 500 / 700 / 800 / 900. Fallback <code>system-ui, sans-serif</code>.</li>
+      <li>Page background <code>#f8fafc</code> (slate-50). Content container <code>max-width: 1040px</code>, horizontal gutter <code>clamp(16px, 4vw, 32px)</code>.</li>
+      <li>Tailwind config: extend nothing — palette maps 1:1 to stock <code>emerald</code> + <code>slate</code>.</li>
+    </ul>
+
+    <h2>2 · Design tokens</h2>
+    <table>
+      <tr><th>Role</th><th>Hex</th><th>Tailwind</th><th>Usage</th></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#10b981;margin-right:6px;vertical-align:-1px"></span>Primary</td><td><code>#10b981</code></td><td><code>emerald-500</code></td><td>CTAs, logo tile, step circles, accents</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#059669;margin-right:6px;vertical-align:-1px"></span>Primary hover</td><td><code>#059669</code></td><td><code>emerald-600</code></td><td>Button hover, icon strokes</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#047857;margin-right:6px;vertical-align:-1px"></span>Primary deep</td><td><code>#047857</code></td><td><code>emerald-700</code></td><td>Text on emerald tints</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#ecfdf5;border:1px solid #e2e8f0;margin-right:6px;vertical-align:-1px"></span>Tint</td><td><code>#ecfdf5</code></td><td><code>emerald-50</code></td><td>Icon tiles, badge bg, soft hover</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#d1fae5;margin-right:6px;vertical-align:-1px"></span>Tint mid</td><td><code>#d1fae5</code></td><td><code>emerald-100</code></td><td>Hero gradient, CTA-band subtext</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#a7f3d0;margin-right:6px;vertical-align:-1px"></span>Tint border</td><td><code>#a7f3d0</code></td><td><code>emerald-200</code></td><td>Badge / soft-button borders</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#0f172a;margin-right:6px;vertical-align:-1px"></span>Ink</td><td><code>#0f172a</code></td><td><code>slate-900</code></td><td>Headings, body</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#475569;margin-right:6px;vertical-align:-1px"></span>Secondary</td><td><code>#475569</code></td><td><code>slate-600</code></td><td>Nav links, hero subcopy</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#64748b;margin-right:6px;vertical-align:-1px"></span>Muted</td><td><code>#64748b</code></td><td><code>slate-500</code></td><td>Card body text, FAQ answers</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#94a3b8;margin-right:6px;vertical-align:-1px"></span>Faint</td><td><code>#94a3b8</code></td><td><code>slate-400</code></td><td>Footer note</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#e2e8f0;margin-right:6px;vertical-align:-1px"></span>Border</td><td><code>#e2e8f0</code></td><td><code>slate-200</code></td><td>Card / section borders</td></tr>
+      <tr><td><span style="display:inline-block;width:12px;height:12px;border-radius:4px;background:#f8fafc;border:1px solid #e2e8f0;margin-right:6px;vertical-align:-1px"></span>Page bg</td><td><code>#f8fafc</code></td><td><code>slate-50</code></td><td>Body background</td></tr>
+    </table>
+    <h3>Radii &amp; shadows</h3>
+    <ul>
+      <li>Pill <code>999px</code> · CTA band <code>28px</code> · cards <code>20px</code> · FAQ items <code>16px</code> · buttons <code>14px</code> · nav CTA <code>12px</code> · icon tiles <code>14px</code>.</li>
+      <li>Primary CTA glow: <code>0 8px 20px -6px rgb(16 185 129 / 0.45)</code>.</li>
+    </ul>
+
+    <h2>3 · Page structure</h2>
+    <p>Single column, top to bottom: <strong>Header → Hero → Features (#features) → How it works (#how) → FAQ (#faq) → CTA band → Footer</strong>. Header nav anchors scroll to section ids.</p>
+
+    <h2>4 · Sections</h2>
+    <h3>4.1 Header</h3>
+    <ul>
+      <li>Flex row, space-between, padding <code>20px</code> vertical. Logo = 36px emerald tile (<code>rounded-[12px]</code>) with white «آ» + wordmark «آرزو» 22px/900.</li>
+      <li>Nav: text links «امکانات» → <code>#features</code>, «سوالات» → <code>#faq</code> (14px/500, slate-600); primary button «ورود» → <code>/login</code>.</li>
+      <li>Not sticky. On mobile the row stays single-line (links shrink, no hamburger).</li>
+    </ul>
+    <h3>4.2 Hero</h3>
+    <ul>
+      <li>Centered, max-width 760px, padding-block <code>clamp(40px,8vw,88px)</code>. Background: radial emerald wash <code>radial-gradient(ellipse 70% 60% at 50% 0%, #d1fae5, transparent 70%)</code>.</li>
+      <li>Badge pill: emerald-50 bg, emerald-200 border, emerald-700 text, 8px emerald dot — «برای دوست‌ها و خانواده».</li>
+      <li>H1 «آرزوهات رو بنویس،&lt;br&gt;بقیه‌ش با ماست» — <code>clamp(30px, 6.5vw, 52px)</code>, weight 900, line-height 1.35.</li>
+      <li>Subcopy 15–18px, slate-600, line-height 1.9, max-width 520px.</li>
+      <li>CTA row (flex, wrap, gap 12): primary «ساخت اولین لیست» → <code>/u/:username</code>; secondary white/bordered «چطور کار می‌کنه؟» → <code>#how</code> (hover: emerald-200 border, emerald-700 text).</li>
+    </ul>
+    <h3>4.3 Features</h3>
+    <ul>
+      <li>Kicker «امکانات» (13px/800, emerald-500) + H2 «هدیه دادن، بدون حدس زدن» centered.</li>
+      <li>Grid: <code>repeat(auto-fit, minmax(230px, 1fr))</code>, gap 16 → 1 col mobile, 2 col tablet, 4 col desktop.</li>
+      <li>Card: white, slate-200 border, <code>rounded-[20px]</code>, padding 24. Anatomy: 44px emerald-50 icon tile with 22px lucide icon stroked <code>#059669</code> → title 17px/800 → body 14px slate-500 lh 1.9.</li>
+      <li>Icons (lucide): <code>plus</code>, <code>share-2</code>, <code>gift</code>, <code>sparkle</code>/diamond. Copy: ساخت لیست در چند ثانیه / اشتراک با یک لینک / رزرو مخفیانه‌ی هدیه / برای هر مناسبتی.</li>
+    </ul>
+    <h3>4.4 How it works</h3>
+    <ul>
+      <li>Full-width white band with 1px slate-200 top+bottom borders (only section on white).</li>
+      <li>3 steps, grid <code>auto-fit minmax(220px,1fr)</code>, centered text: 52px emerald circle with Persian numeral (۱ ۲ ۳, 22px/900 white) → title 17px/800 → body 14px slate-500.</li>
+      <li>Steps: لیستت رو بساز / آرزوهات رو اضافه کن / لینک رو بفرست.</li>
+    </ul>
+    <h3>4.5 FAQ</h3>
+    <ul>
+      <li>Max-width 720px. Native <code>&lt;details&gt;/&lt;summary&gt;</code> accordion — no JS. Hide default marker (<code>list-style:none</code> + <code>::-webkit-details-marker</code>).</li>
+      <li>Item: white, slate-200 border, <code>rounded-2xl</code>, padding 18×22. Summary: 16px/700 question + trailing emerald «＋». Answer: 14px slate-500, 12px top margin.</li>
+      <li>First item open by default (config flag <code>faqFirstOpen</code>). 5 questions: pricing, no-signup viewing, reservation secrecy, privacy, supported stores.</li>
+    </ul>
+    <h3>4.6 CTA band (optional, flag <code>showCtaBand</code>)</h3>
+    <ul>
+      <li>Emerald-500 card, <code>rounded-[28px]</code>, centered. H2 white 22–32px/900 «آماده‌ای اولین لیستت رو بسازی؟», subline emerald-100, white button «شروع رایگان» (emerald-700 text, hover emerald-50 bg).</li>
+    </ul>
+    <h3>4.7 Footer</h3>
+    <ul>
+      <li>White, slate-200 top border. Flex wrap, space-between: mini logo + wordmark · tagline (13px slate-400) · link «نمونه صفحه کاربر ←».</li>
+    </ul>
+
+    <h2>5 · Responsive &amp; a11y</h2>
+    <ul>
+      <li>No breakpoint-specific layouts — fluid via <code>clamp()</code> type/spacing and auto-fit grids. Test at 360, 768, 1280px.</li>
+      <li>All interactive targets ≥ 44px on touch. Anchor links must not use <code>scrollIntoView</code>-based JS; native anchors suffice.</li>
+      <li>RTL: order comes free from <code>dir="rtl"</code>; keep logical (start/end) properties in CSS, no hardcoded left/right.</li>
+    </ul>
+
+    <h2>6 · Config flags</h2>
+    <table>
+      <tr><th>Flag</th><th>Type</th><th>Default</th><th>Effect</th></tr>
+      <tr><td><code>faqFirstOpen</code></td><td>boolean</td><td>true</td><td>First FAQ item rendered expanded</td></tr>
+      <tr><td><code>showCtaBand</code></td><td>boolean</td><td>true</td><td>Render bottom CTA band</td></tr>
+    </table>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
