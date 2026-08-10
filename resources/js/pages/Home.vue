@@ -6,12 +6,22 @@ import GiftIcon from '@/components/icons/GiftIcon.vue';
 import PlusIcon from '@/components/icons/PlusIcon.vue';
 import ShareIcon from '@/components/icons/ShareIcon.vue';
 import SparkleIcon from '@/components/icons/SparkleIcon.vue';
-import { login, register } from '@/routes';
+import { setHeaderNav } from '@/composables/useHeaderNav';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { register } from '@/routes';
 import type { Faq } from '@/types';
+
+defineOptions({ layout: AppLayout });
 
 defineProps<{
     faqs: Faq[];
 }>();
+
+/** These anchors only resolve here, so this is the page that owns them. */
+setHeaderNav([
+    { label: 'امکانات', href: '#features' },
+    { label: 'سوالات', href: '#faq' },
+]);
 
 /*
  * Marketing copy, so it lives in the page rather than the database — unlike the
@@ -61,44 +71,8 @@ const steps: { number: string; title: string; body: string }[] = [
 </script>
 
 <template>
-    <div class="min-h-screen bg-slate-50">
+    <div class="flex flex-1 flex-col">
         <Head title="لیست آرزوها برای دوست‌ها و خانواده" />
-
-        <!-- Not sticky, and single-line on mobile: the links shrink, no hamburger. -->
-        <header
-            class="mx-auto flex w-full max-w-5xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8"
-        >
-            <div class="flex items-center gap-2.5">
-                <span
-                    aria-hidden="true"
-                    class="flex size-9 items-center justify-center rounded-xl bg-emerald-500 text-lg font-black text-white"
-                >
-                    آ
-                </span>
-                <span class="text-2xl font-black text-slate-900">آرزو</span>
-            </div>
-
-            <nav class="flex items-center gap-2 sm:gap-5">
-                <a
-                    href="#features"
-                    class="flex h-11 items-center px-1 text-sm font-medium text-slate-600 transition-colors hover:text-emerald-700"
-                >
-                    امکانات
-                </a>
-                <a
-                    href="#faq"
-                    class="flex h-11 items-center px-1 text-sm font-medium text-slate-600 transition-colors hover:text-emerald-700"
-                >
-                    سوالات
-                </a>
-                <Link
-                    :href="login()"
-                    class="flex h-11 items-center rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white transition-colors hover:bg-emerald-600"
-                >
-                    ورود
-                </Link>
-            </nav>
-        </header>
 
         <main>
             <section class="bg-radial from-emerald-100 to-transparent">
@@ -283,7 +257,7 @@ const steps: { number: string; title: string; body: string }[] = [
             </section>
         </main>
 
-        <footer class="border-t border-slate-200 bg-white">
+        <footer class="mt-auto border-t border-slate-200 bg-white">
             <div
                 class="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4 px-4 py-6 sm:px-6 lg:px-8"
             >
