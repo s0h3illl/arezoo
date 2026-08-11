@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import { provideHeaderNav } from '@/composables/useHeaderNav';
 
@@ -10,5 +11,6 @@ provideHeaderNav();
     <div dir="rtl" class="flex min-h-screen flex-col bg-slate-50">
         <AppHeader />
         <slot />
+        <AppFooter />
     </div>
 </template>

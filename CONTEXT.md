@@ -51,6 +51,9 @@ _Avoid_: Balance (a Balance is what an owner may withdraw; this is what the plat
 **Admin**:
 A user who can see every user other than an admin, every contribution and withdrawal, and who decides whether a withdrawal is paid. Not a role anyone can reach by signing up, and not one the panel manages: a staff account is created, blocked, or given a password out of band.
 
+**Terms of use**:
+The rules a user accepts by signing up, published at `/terms`. One Markdown file in the repository, so the wording is reviewed in a diff and changes on deploy. There is no draft and no history of its own: what is on the branch is what the reader sees, and git remembers the rest.
+
 **Blocked**:
 A user an admin has barred from the app. A blocked user cannot sign in, and nothing of theirs is reachable by anyone else. Blocking never touches their money.
 _Avoid_: Banned, suspended, deactivated

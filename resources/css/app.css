@@ -28,3 +28,55 @@
         @apply border-red-400 ring-[3px] ring-red-500/15;
     }
 }
+
+/*
+    The terms of use, as rendered from `resources/markdown/terms.md`. Every
+    selector here is a bare element, because the HTML is produced by CommonMark
+    and there is no way to hang a class on it.
+
+    There is no typography plugin in this project, so the handful of elements
+    the document can contain are styled by hand. A blockquote is the callout: it
+    is the one piece of Markdown that reads as "set this apart" without needing
+    markup of its own.
+*/
+@utility legal-prose {
+    & h2 {
+        @apply mt-8 border-t border-slate-100 pt-6 text-lg font-extrabold text-slate-900;
+    }
+
+    /* The document opens on a heading, which has nothing above it to divide. */
+    & h2:first-child {
+        @apply mt-0 border-t-0 pt-0;
+    }
+
+    & p {
+        @apply mt-3 text-sm leading-loose text-slate-600;
+    }
+
+    & ul {
+        @apply mt-3 list-disc space-y-1 ps-5 text-sm leading-loose text-slate-600;
+    }
+
+    & a {
+        @apply font-bold text-emerald-600 hover:text-emerald-700;
+
+        /*
+            A Latin address or URL reorders inside RTL text unless it is
+            isolated. Isolation alone, with no direction of its own, so Persian
+            link text is left to read as it was written.
+        */
+        unicode-bidi: isolate;
+    }
+
+    & blockquote {
+        @apply mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-center sm:p-6 lg:p-7;
+    }
+
+    & blockquote h3 {
+        @apply text-[17px] font-extrabold text-emerald-700;
+    }
+
+    & blockquote p {
+        @apply mt-2 text-sm leading-relaxed text-emerald-800;
+    }
+}
