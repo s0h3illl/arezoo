@@ -39,12 +39,23 @@ class AppServiceProvider extends ServiceProvider
      * 404 for an admin without any of them having to remember to check. The
      * binding is global on purpose, and so is the loss of panel control over
      * staff accounts that comes with it — see ADR-0008.
+     *
+     * The `username` parameter is a second, separate binding, keyed on the
+     * username column and used by the public profile. It keeps admins, who read
+     * and publish wishes like anyone else — ADR-0008 governs the panel, not the
+     * public site — and drops blocked users, so nothing of theirs is reachable
+     * without every controller remembering to check.
      */
     protected function configureRouteBindings(): void
     {
         Route::bind('user', fn (string $value): User => User::query()
             ->excludingAdmins()
             ->whereKey($value)
+            ->firstOrFail());
+
+        Route::bind('username', fn (string $value): User => User::query()
+            ->excludingBlocked()
+            ->withUsername($value)
             ->firstOrFail());
     }
 

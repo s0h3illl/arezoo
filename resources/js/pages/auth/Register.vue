@@ -11,6 +11,7 @@ defineOptions({ layout: AppLayout });
 
 const form = useForm({
     name: '',
+    username: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -48,6 +49,22 @@ function submit(): void {
                     placeholder="اسمت رو بنویس"
                     autocomplete="name"
                     :error="form.errors.name"
+                />
+
+                <!--
+                    `nickname` rather than `username`: the email field below is
+                    what a password manager stores as the account's username, and
+                    two fields claiming that token would confuse the fill.
+                -->
+                <TextField
+                    id="username"
+                    v-model="form.username"
+                    label="نام کاربری"
+                    type="text"
+                    dir="ltr"
+                    placeholder="sara-ahmadi"
+                    autocomplete="nickname"
+                    :error="form.errors.username"
                 />
 
                 <TextField

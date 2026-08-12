@@ -6,7 +6,10 @@
 export type User = {
     id: number;
     name: string;
+    username: string;
     email: string;
+    avatar: string | null;
+    bio: string | null;
     email_verified_at: string | null;
     is_admin: boolean;
     is_blocked: boolean;

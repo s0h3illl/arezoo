@@ -26,6 +26,10 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
+            // `unique()` is not decoration: plain `userName()` repeats itself often
+            // enough to clash on the unique index once a few hundred users exist,
+            // which is a seeder or a test failing for reasons of its own.
+            'username' => fake()->unique()->userName(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         // get an account that can reach the panel locally.
         User::factory()->admin()->create([
             'name' => 'Test User',
+            'username' => 'test-user',
             'email' => 'test@example.com',
         ]);
 

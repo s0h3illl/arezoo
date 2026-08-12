@@ -18,16 +18,16 @@ This ticket ends at a route that resolves and 404s correctly. The page it render
 
 **Status:** ready-for-agent
 
-- [ ] `users` gains `username` (unique), `avatar` (nullable) and `bio` (nullable), edited into the existing users migration rather than a new one
-- [ ] Registration asks for a username alongside name, email and password, and creates the user with it
-- [ ] A username is required, slug-safe, length-bounded, and rejected when already taken — including when it differs only by case
-- [ ] A username matching a reserved path is rejected
-- [ ] The register page shows the field's validation errors in the same style as its existing fields, in Persian
-- [ ] `/u/{username}` resolves a user through a binding keyed on the username column
-- [ ] The panel's `user` binding is unchanged and still resolves by primary key, and no admin route accepts a username
-- [ ] An admin's own profile URL resolves like anyone else's
-- [ ] A blocked user's profile URL answers 404
-- [ ] An unknown username answers 404 through the app's existing Persian error page
-- [ ] A guest reaches the route without being redirected to login
-- [ ] `UserFactory` generates a unique username, and `DatabaseSeeder`'s admin account has one
-- [ ] `php artisan migrate:fresh --seed` completes, Pint clean, larastan clean
+- [x] `users` gains `username` (unique), `avatar` (nullable) and `bio` (nullable), edited into the existing users migration rather than a new one
+- [x] Registration asks for a username alongside name, email and password, and creates the user with it
+- [x] A username is required, slug-safe, length-bounded, and rejected when already taken — including when it differs only by case
+- [x] A username matching a reserved path is rejected
+- [x] The register page shows the field's validation errors in the same style as its existing fields, in Persian
+- [x] `/u/{username}` resolves a user through a binding keyed on the username column
+- [x] The panel's `user` binding is unchanged and still resolves by primary key, and no admin route accepts a username
+- [x] An admin's own profile URL resolves like anyone else's
+- [x] A blocked user's profile URL answers 404
+- [x] An unknown username answers 404 through the app's existing Persian error page
+- [x] A guest reaches the route without being redirected to login
+- [x] `UserFactory` generates a unique username, and `DatabaseSeeder`'s admin account has one
+- [x] `php artisan migrate:fresh --seed` completes, Pint clean, larastan clean

@@ -180,8 +180,10 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
+        // A username the app keeps for its own paths is not "invalid" — the shape
+        // was fine, the name is simply spoken for.
+        'username' => [
+            'not_in' => 'این نام کاربری در دسترس نیست.',
         ],
     ],
 
@@ -203,6 +205,7 @@ return [
         'password' => 'رمز عبور',
         'password_confirmation' => 'تکرار رمز عبور',
         'token' => 'کد بازیابی',
+        'username' => 'نام کاربری',
     ],
 
 ];
