@@ -20,7 +20,18 @@ A single attempt to move money through the payment gateway. Every attempt is kep
 _Avoid_: Transaction
 
 **Owner**:
-The user a wish belongs to.
+The user a wish belongs to, and whose profile it appears on.
+
+**Profile**:
+A user's public page, at `/u/{username}`, holding every wish they have published. Anyone may read it without an account — it exists to be sent to people. Only its owner may add to it or remove from it.
+
+**Username**:
+The name a user picks for themselves when they sign up, and the only part of their profile's address. Unique, and theirs to change — which frees the one they gave up, so a link shared under an old username may later lead somewhere else.
+_Avoid_: Handle, slug
+
+**Visitor**:
+Anyone reading a profile that is not theirs, whether they are signed in or not. A visitor sees the same page in either case.
+_Avoid_: Guest (which means signed out, whosever profile they are reading)
 
 **Visibility**:
 Who can see a contribution's contributor details (name, amount, message) — never whether its money counts. `public`: everyone. `owner`: only the wish's owner. `hidden`: no one, not even the owner.
@@ -49,7 +60,7 @@ The lifetime sum of every contribution whose money has landed, across the whole 
 _Avoid_: Balance (a Balance is what an owner may withdraw; this is what the platform has ever taken in, and never goes down)
 
 **Admin**:
-A user who can see every user other than an admin, every contribution and withdrawal, and who decides whether a withdrawal is paid. Not a role anyone can reach by signing up, and not one the panel manages: a staff account is created, blocked, or given a password out of band.
+A user who can see every user other than an admin, every contribution and withdrawal, and who decides whether a withdrawal is paid. Not a role anyone can reach by signing up, and not one the panel manages: a staff account is created, blocked, or given a password out of band. Being staff reaches no further than the panel — out in the app an admin publishes wishes, has a profile, and is contributed to like anyone else.
 
 **Terms of use**:
 The rules a user accepts by signing up, published at `/terms`. One Markdown file in the repository, so the wording is reviewed in a diff and changes on deploy. There is no draft and no history of its own: what is on the branch is what the reader sees, and git remembers the rest.
