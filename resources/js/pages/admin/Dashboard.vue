@@ -4,7 +4,8 @@ import { Head } from '@inertiajs/vue3';
 import DashboardTile from '@/components/admin/DashboardTile.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { formatMoment, formatToman } from '@/lib/format';
-import type { DashboardSnapshot, Wish } from '@/types';
+import type { DashboardSnapshot } from '@/types';
+import type { Wish } from '@/types/admin';
 
 defineOptions({ layout: AdminLayout });
 

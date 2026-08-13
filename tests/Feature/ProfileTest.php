@@ -1,11 +1,15 @@
 <?php
 
+use App\Http\Resources\WishResource;
+use App\Models\Contribution;
 use App\Models\User;
+use App\Models\Wish;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia;
 
 /*
-| A profile is a page built to be sent to people, so the interesting cases are all
-| about who the URL answers to. The page itself is the next ticket's business.
+| A profile is a page built to be sent to people, so the first cases are all about
+| who the URL answers to. The grid it carries follows below.
 */
 
 test('a profile resolves by username', function () {
@@ -76,4 +80,122 @@ test('the panel still resolves a user by primary key, and never by username', fu
 
     $this->get(route('admin.users.show', $user->id))->assertOk();
     $this->get(route('admin.users.show', 'sara'))->assertNotFound();
+});
+
+/*
+| Who is reading. The owner gets a button nobody else does, so the page is told
+| whose it is by the server — never by a flag the browser could set for itself.
+*/
+test('an owner is told the profile is theirs', function () {
+    $sara = User::factory()->create(['username' => 'sara']);
+    $this->actingAs($sara);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('is_owner', true)
+    );
+});
+
+test('a signed-in visitor does not own the profile they are reading', function () {
+    User::factory()->create(['username' => 'sara']);
+    $this->actingAs(User::factory()->create(['username' => 'reza']));
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('is_owner', false)
+    );
+});
+
+test('a guest owns no profile', function () {
+    User::factory()->create(['username' => 'sara']);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('is_owner', false)
+    );
+});
+
+test('a profile carries the wishes of its owner and of nobody else', function () {
+    $sara = User::factory()->create(['username' => 'sara']);
+    Wish::factory()->count(2)->create(['user_id' => $sara->id]);
+    Wish::factory()->create(['title' => 'آرزوی یک نفر دیگر']);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->has('wishes.data', 2)
+            ->where('wishes.meta.total', 2)
+    );
+});
+
+test('a card carries its cover, title, description, price and what it has received', function () {
+    $sara = User::factory()->create(['username' => 'sara']);
+    $wish = Wish::factory()->create([
+        'user_id' => $sara->id,
+        'title' => 'دوچرخه‌ی کوهستان',
+        'description' => 'برای رفتن به کوه',
+        'price' => 3_200_000,
+    ]);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page->has(
+            'wishes.data.0',
+            fn (AssertableInertia $card) => $card
+                ->where('id', $wish->id)
+                ->where('title', 'دوچرخه‌ی کوهستان')
+                ->where('description', 'برای رفتن به کوه')
+                ->where('thumbnail', Storage::disk('public')->url((string) $wish->thumbnail))
+                ->where('price', 3_200_000)
+                ->where('received', 0)
+                ->etc()
+        )
+    );
+});
+
+test('only paid contributions count towards what a wish has received', function () {
+    $sara = User::factory()->create(['username' => 'sara']);
+    $wish = Wish::factory()->create(['user_id' => $sara->id, 'price' => 500_000]);
+    Contribution::factory()->paid()->create(['wish_id' => $wish->id, 'amount' => 120_000]);
+    Contribution::factory()->paid()->create(['wish_id' => $wish->id, 'amount' => 80_000]);
+    Contribution::factory()->pending()->create(['wish_id' => $wish->id, 'amount' => 900_000]);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('wishes.data.0.received', 200_000)
+    );
+});
+
+/*
+| Contributions are uncapped (ADR-0004), so the figure is allowed to pass the
+| price. The card clamps its bar; the number it publishes stays the true one.
+*/
+test('a wish that received more than its price reports the whole of it', function () {
+    $sara = User::factory()->create(['username' => 'sara']);
+    $wish = Wish::factory()->create(['user_id' => $sara->id, 'price' => 500_000]);
+    Contribution::factory()->paid()->create(['wish_id' => $wish->id, 'amount' => 700_000]);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('wishes.data.0.price', 500_000)
+            ->where('wishes.data.0.received', 700_000)
+    );
+});
+
+test('serialising a wish without the grid aggregate fails rather than reporting nothing', function () {
+    $wish = Wish::factory()->make();
+
+    expect(fn () => WishResource::make($wish)->toArray(request()))
+        ->toThrow(LogicException::class);
+});
+
+test('the grid hands over one page of wishes and a cursor to the next', function () {
+    $sara = User::factory()->create(['username' => 'sara']);
+    Wish::factory()->count(13)->create(['user_id' => $sara->id]);
+
+    $response = $this->get(route('profile', 'sara'));
+
+    $response->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->has('wishes.data', 12)
+            ->where('wishes.meta.total', 13)
+    );
+
+    expect($response->viewData('page'))
+        ->toHaveKey('scrollProps.wishes.nextPage', 2)
+        ->toHaveKey('mergeProps', ['wishes.data']);
 });

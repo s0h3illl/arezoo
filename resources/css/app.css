@@ -30,6 +30,21 @@
 }
 
 /*
+    The cover of a wish that has no picture of its own. Drawn rather than
+    fetched, so an empty cover is never a broken image — and written here
+    because a repeating gradient is one long arbitrary value inline.
+*/
+@utility wish-cover-placeholder {
+    background: repeating-linear-gradient(
+        45deg,
+        var(--color-slate-100) 0,
+        var(--color-slate-100) 12px,
+        var(--color-slate-50) 12px,
+        var(--color-slate-50) 24px
+    );
+}
+
+/*
     The terms of use, as rendered from `resources/markdown/terms.md`. Every
     selector here is a bare element, because the HTML is produced by CommonMark
     and there is no way to hang a class on it.

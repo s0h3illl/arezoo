@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Database\Factories\WishFactory;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +24,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read User $owner
  * @property-read Collection<int, Contribution> $contributions
+ * @property-read int|null $received_total
  */
 class Wish extends Model
 {
@@ -51,14 +54,44 @@ class Wish extends Model
     }
 
     /**
+     * The contributions to this wish whose money actually landed.
+     *
+     * One relation holds the definition of what counts, so the figure a single
+     * wish reports and the figure a whole grid of them reports are the same
+     * figure rather than two spellings of it.
+     *
+     * @return HasMany<Contribution, $this>
+     */
+    public function paidContributions(): HasMany
+    {
+        return $this->contributions()->paid();
+    }
+
+    /**
      * The amount this wish has actually received.
      *
-     * Only paid contributions count, and the total is deliberately uncapped —
-     * a wish is allowed to receive more than its price.
+     * The total is deliberately uncapped — a wish is allowed to receive more
+     * than its price.
      */
     public function receivedTotal(): int
     {
-        return (int) $this->contributions()->paid()->sum('amount');
+        return (int) $this->paidContributions()->sum('amount');
+    }
+
+    /**
+     * Read the same amount as `receivedTotal()`, for every wish in one query.
+     *
+     * A grid of cards each showing what it has received would otherwise cost a
+     * query per card, so the sum rides along with the rows as `received_total`.
+     * It is null where nothing has been paid, which is a sum over no rows rather
+     * than a missing figure.
+     *
+     * @param  Builder<Wish>  $query
+     */
+    #[Scope]
+    protected function withReceivedTotal(Builder $query): void
+    {
+        $query->withSum('paidContributions as received_total', 'amount');
     }
 
     /**
@@ -68,6 +101,6 @@ class Wish extends Model
      */
     public function contributorCount(): int
     {
-        return $this->contributions()->paid()->distinct()->count('contributor_id');
+        return $this->paidContributions()->distinct()->count('contributor_id');
     }
 }

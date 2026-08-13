@@ -12,7 +12,12 @@ Route::get('terms', TermsController::class)->name('terms');
 | The parameter is `username`, not `user`: the panel's `user` binding resolves by
 | primary key and leaves out admins, and an explicit binding cannot be given a
 | custom key per route. A second name gets a second binding — see AppServiceProvider.
+|
+| The `:username` field is a hint, not the resolver. The explicit binding still
+| does the resolving, and Laravel strips the field from the URI; it is here so
+| Wayfinder types the generated helper's argument as the string it is, rather
+| than falling back to the model's integer route key.
 */
-Route::get('u/{username}', ProfileController::class)->name('profile');
+Route::get('u/{username:username}', ProfileController::class)->name('profile');
 
 require __DIR__.'/admin.php';

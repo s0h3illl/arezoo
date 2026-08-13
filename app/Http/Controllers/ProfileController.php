@@ -2,23 +2,31 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\WishResource;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProfileController extends Controller
 {
     /**
-     * Show a user's public profile.
+     * How many cards one page of the grid holds.
      *
-     * The user arrives already resolved from the username in the URL, and a
-     * username nobody holds — or one belonging to a blocked user — never gets
-     * this far. See the `username` binding in `AppServiceProvider`.
+     * Divisible by two, three and four, so no breakpoint ends on a short row.
      */
-    public function __invoke(User $username): Response
+    private const int WISHES_PER_PAGE = 12;
+
+    public function __invoke(Request $request, User $user): Response
     {
         return Inertia::render('Profile', [
-            'user' => $username->only(['name', 'username', 'avatar', 'bio']),
+            'user' => $user->only(['name', 'username', 'avatar', 'bio']),
+            'is_owner' => auth()->user()?->id == $user->id,
+            'wishes' => Inertia::scroll(fn () => WishResource::collection(
+                $user->wishes()
+                    ->withReceivedTotal()
+                    ->paginate(self::WISHES_PER_PAGE)
+            )),
         ]);
     }
 }

@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -29,6 +31,7 @@ use Illuminate\Support\Str;
  * @property bool $is_blocked
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property-read Collection<int, Wish> $wishes
  */
 #[Fillable(['name', 'username', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -48,6 +51,16 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_admin' => false,
         'is_blocked' => false,
     ];
+
+    /**
+     * The wishes this user has published, which are the whole of their profile.
+     *
+     * @return HasMany<Wish, $this>
+     */
+    public function wishes(): HasMany
+    {
+        return $this->hasMany(Wish::class);
+    }
 
     /**
      * Store a username in lower case.

@@ -5,7 +5,7 @@ import { computed } from 'vue';
 import HomeIcon from '@/components/icons/HomeIcon.vue';
 import UserIcon from '@/components/icons/UserIcon.vue';
 import { useHeaderNav } from '@/composables/useHeaderNav';
-import { home, login } from '@/routes';
+import { home, login, profile } from '@/routes';
 
 const page = usePage();
 
@@ -56,15 +56,14 @@ function isAnchor(href: string): boolean {
                 <HomeIcon />
             </Link>
 
-            <!-- The profile section isn't built yet, so its button holds '#'. -->
-            <a
+            <Link
                 v-if="user"
-                href="#"
+                :href="profile(user.username)"
                 aria-label="حساب کاربری"
                 class="flex size-[38px] items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-emerald-200 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
             >
                 <UserIcon />
-            </a>
+            </Link>
 
             <Link
                 v-else
