@@ -200,10 +200,15 @@ return [
 
     'attributes' => [
         'current_password' => 'رمز عبور فعلی',
+        'description' => 'توضیح',
         'email' => 'ایمیل',
         'name' => 'نام',
         'password' => 'رمز عبور',
         'password_confirmation' => 'تکرار رمز عبور',
+        'price' => 'قیمت',
+        'purchase_link' => 'لینک محصول',
+        'thumbnail' => 'تصویر',
+        'title' => 'عنوان',
         'token' => 'کد بازیابی',
         'username' => 'نام کاربری',
     ],

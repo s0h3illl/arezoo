@@ -65,9 +65,8 @@ const barWidth = computed(
             </h3>
 
             <!--
-                Absent on a wish that was added without one. The column is not
-                nullable until the modal that writes it lands, so today this
-                only ever hides an empty description.
+                Absent on a wish that was added without one — the column is
+                nullable, because only the title and the price are asked for.
             -->
             <p
                 v-if="wish.description"

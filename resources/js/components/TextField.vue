@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { useTemplateRef } from 'vue';
+
 defineProps<{
     id: string;
+    /** The form field name — left off where nothing needs to target the input by it. */
+    name?: string;
     label: string;
     type?: string;
     dir?: string;
@@ -10,6 +14,21 @@ defineProps<{
 }>();
 
 const model = defineModel<string>({ required: true });
+
+const input = useTemplateRef<HTMLInputElement>('input');
+
+/**
+ * Hand focus to this field.
+ *
+ * Exposed for the caller that owns the moment focus should move rather than the
+ * field itself — the add-wish modal takes the first field when it opens, which
+ * is a decision about the dialog, not about any one input.
+ */
+function focus(): void {
+    input.value?.focus();
+}
+
+defineExpose({ focus });
 </script>
 
 <template>
@@ -22,8 +41,10 @@ const model = defineModel<string>({ required: true });
         </div>
         <input
             :id="id"
+            ref="input"
             v-model="model"
             class="field-input"
+            :name="name"
             :type="type ?? 'text'"
             :dir="dir"
             :placeholder="placeholder"

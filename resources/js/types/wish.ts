@@ -14,10 +14,12 @@ export type Wish = {
     id: number;
     user_id: number;
     title: string;
-    description: string;
+    /** Optional when the wish was added; the card omits the row without one. */
+    description: string | null;
     /** A ready URL, or null where the wish has no cover of its own. */
     thumbnail: string | null;
-    purchase_link: string;
+    /** Optional too, and shown on the wish detail page rather than on a card. */
+    purchase_link: string | null;
     price: number;
     /** Paid contributions only, and uncapped: it may pass the price (ADR-0004). */
     received: number;

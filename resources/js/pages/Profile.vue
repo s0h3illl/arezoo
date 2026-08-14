@@ -3,7 +3,7 @@ import { Head, InfiniteScroll } from '@inertiajs/vue3';
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
 import { computed } from 'vue';
 
-import PlusIcon from '@/components/icons/PlusIcon.vue';
+import AddWishDialog from '@/components/profile/AddWishDialog.vue';
 import WishCard from '@/components/profile/WishCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { formatNumber } from '@/lib/format';
@@ -97,15 +97,12 @@ const initial = computed(() => [...props.user.name][0] ?? '');
                     </p>
                 </div>
 
-                <!-- The modal behind this button is the next ticket. -->
-                <button
-                    v-if="is_owner"
-                    type="button"
-                    class="flex h-12 shrink-0 items-center gap-2 rounded-xl bg-emerald-500 px-6 text-sm font-bold text-white shadow-lg shadow-emerald-500/40 transition-colors hover:bg-emerald-600"
-                >
-                    <PlusIcon />
-                    آرزوی جدید
-                </button>
+                <!--
+                    Both the button and the dialog behind it: the trigger has to
+                    be the thing that opens it for focus to come back here when
+                    it closes.
+                -->
+                <AddWishDialog v-if="is_owner" />
             </header>
 
             <!--

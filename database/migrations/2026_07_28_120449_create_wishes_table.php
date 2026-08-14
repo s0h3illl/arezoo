@@ -16,9 +16,9 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(User::class);
             $table->string('title');
-            $table->text('description');
+            $table->text('description')->nullable();
             $table->string('thumbnail')->nullable();
-            $table->string('purchase_link');
+            $table->string('purchase_link', 2_048)->nullable();
             $table->unsignedInteger('price');
             $table->timestamps();
         });

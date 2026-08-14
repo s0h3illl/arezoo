@@ -37,7 +37,7 @@ class WishResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: int, user_id: int, title: string, description: string, thumbnail: ?string, purchase_link: string, price: int, received: int, created_at: ?Carbon, updated_at: ?Carbon}
+     * @return array{id: int, user_id: int, title: string, description: ?string, thumbnail: ?string, purchase_link: ?string, price: int, received: int, created_at: ?Carbon, updated_at: ?Carbon}
      *
      * @throws LogicException when the grid's aggregate was never loaded.
      */

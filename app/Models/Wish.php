@@ -16,9 +16,9 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property string $title
- * @property string $description
+ * @property string|null $description
  * @property string|null $thumbnail
- * @property string $purchase_link
+ * @property string|null $purchase_link
  * @property int $price
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
