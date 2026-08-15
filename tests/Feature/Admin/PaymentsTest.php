@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PaymentStatus;
+use App\Models\Contribution;
 use App\Models\Payment;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia;
@@ -19,6 +20,22 @@ test('an admin sees a gateway attempt that failed and left no contribution behin
             ->component('admin/payments/Index')
             ->where('payments.data.0.id', $payment->id)
             ->where('payments.data.0.contribution', null)
+    );
+});
+
+/*
+| The same as on the contributions screen: a deleted wish must not take the
+| payment record down with it. See ADR-0003.
+*/
+test('an attempt shows its wish even once that wish is deleted', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $contribution = Contribution::factory()->paid()->create();
+    $contribution->wish->delete();
+
+    $this->get(route('admin.payments.index'))->assertOk()->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('payments.data.0.contribution.wish.id', $contribution->wish_id)
+            ->where('payments.data.0.contribution.wish.title', $contribution->wish->title)
     );
 });
 

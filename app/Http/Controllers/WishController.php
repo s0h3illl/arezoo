@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreWishRequest;
+use App\Models\Wish;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class WishController extends Controller
 {
@@ -27,5 +29,12 @@ class WishController extends Controller
         ]);
 
         return to_route('profile', $owner->username);
+    }
+
+    public function destroy(Request $request, Wish $wish): RedirectResponse
+    {
+        $wish->delete();
+
+        return to_route('profile', $request->user()->username);
     }
 }

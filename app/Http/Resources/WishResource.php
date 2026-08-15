@@ -15,8 +15,8 @@ use LogicException;
  * One resource for the whole model rather than one per screen. A screen that
  * wants less narrows what it declares where it uses it, so a field added to the
  * table reaches every page at once instead of being threaded through a new
- * shape each time. The profile grid renders five of these; see `WishCard.vue`,
- * whose prop is a `Pick<Wish, …>` of exactly those.
+ * shape each time. The profile grid renders a handful of these; see
+ * `WishCard.vue`, whose prop is a `Pick<Wish, …>` of exactly the ones it draws.
  *
  * `received` is read from the `received_total` the grid's one aggregate brings
  * along — see `Wish::withReceivedTotal()`. It is uncapped (ADR-0004), so a wish

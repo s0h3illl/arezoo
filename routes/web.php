@@ -31,4 +31,14 @@ Route::post('wishes', [WishController::class, 'store'])
     ->middleware('auth')
     ->name('wishes.store');
 
+/*
+| Deleting names the wish, so unlike storing there is an owner to check against.
+| `auth` still comes first, so a guest is sent to sign in rather than told a wish
+| they cannot see exists.
+*/
+Route::delete('wishes/{wish}', [WishController::class, 'destroy'])
+    ->middleware('auth')
+    ->can('delete', 'wish')
+    ->name('wishes.destroy');
+
 require __DIR__.'/admin.php';

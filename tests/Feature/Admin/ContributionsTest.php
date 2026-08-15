@@ -83,6 +83,22 @@ test('a contribution shows the gateway attempt behind it', function () {
 });
 
 /*
+| A contribution outlives its wish (ADR-0003), and this is the screen its money is
+| read on, so the row must still render with the wish it names.
+*/
+test('a contribution shows its wish even once that wish is deleted', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $contribution = Contribution::factory()->paid()->create();
+    $contribution->wish->delete();
+
+    $this->get(route('admin.contributions.index'))->assertOk()->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('contributions.data.0.wish.id', $contribution->wish_id)
+            ->where('contributions.data.0.wish.title', $contribution->wish->title)
+    );
+});
+
+/*
 | A 403 would confirm the section exists, and a login redirect would too. Everyone
 | who isn't an admin gets the answer a made-up URL would give.
 */

@@ -55,13 +55,16 @@ class Contribution extends Model
     }
 
     /**
-     * The wish this contribution was made towards.
+     * The wish this contribution was made towards, deleted or not.
+     *
+     * A contribution outlives its wish (ADR-0003), so the relation has to reach
+     * a trashed one rather than resolving to null.
      *
      * @return BelongsTo<Wish, $this>
      */
     public function wish(): BelongsTo
     {
-        return $this->belongsTo(Wish::class);
+        return $this->belongsTo(Wish::class)->withTrashed();
     }
 
     /**

@@ -143,6 +143,7 @@ const initial = computed(() => [...props.user.name][0] ?? '');
                         v-for="wish in wishes.data"
                         :key="wish.id"
                         :wish="wish"
+                        :deletable="is_owner"
                     />
                 </div>
             </InfiniteScroll>

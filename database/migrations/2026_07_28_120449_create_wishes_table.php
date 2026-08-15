@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('thumbnail')->nullable();
             $table->string('purchase_link', 2_048)->nullable();
             $table->unsignedInteger('price');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

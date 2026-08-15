@@ -4,8 +4,8 @@
  *
  * One shape for the whole model rather than one per screen. A page that wants
  * less narrows with `Pick` where it uses it — see `WishCard.vue`, which takes
- * only the five fields it renders — so a column added to the table reaches
- * every page at once instead of being threaded through a new type each time.
+ * only the fields it renders — so a column added to the table reaches every
+ * page at once instead of being threaded through a new type each time.
  *
  * The admin panel reads a wish through its own narrower shape, in
  * `@/types/admin`, mirroring the resource namespace on the server.

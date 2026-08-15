@@ -14,17 +14,17 @@ Deleting is owner-only and authorised on the server, not merely hidden in the UI
 
 **Blocked by:** 02 — The profile page and its wish grid.
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] `wishes` gains `deleted_at` and the model uses `SoftDeletes`, edited into the existing wishes migration
-- [ ] An owner sees a delete control on each of their own cards; a signed-in visitor and a guest see none
-- [ ] The delete route refuses a signed-in visitor and a guest, not merely hiding the control
-- [ ] An owner deletes a wish and it disappears from their profile
-- [ ] A wish with paid contributions deletes just as freely as one without
-- [ ] **After deleting a wish, every contribution to it still exists**
-- [ ] **After deleting a wish, the owner's derived total from those contributions is unchanged**
-- [ ] A deleted wish is absent from ordinary queries, including the profile grid and the wish count chip
-- [ ] The contributions foreign key still cascades on a force delete, which remains the deliberate purge path
-- [ ] Deleting asks for confirmation before it fires
-- [ ] `.scratch/contributions/issues/05` is updated to reflect that the wish half is done
-- [ ] `php artisan migrate:fresh --seed` completes, Pint clean, larastan clean
+- [x] `wishes` gains `deleted_at` and the model uses `SoftDeletes`, edited into the existing wishes migration
+- [x] An owner sees a delete control on each of their own cards; a signed-in visitor and a guest see none
+- [x] The delete route refuses a signed-in visitor and a guest, not merely hiding the control
+- [x] An owner deletes a wish and it disappears from their profile
+- [x] A wish with paid contributions deletes just as freely as one without
+- [x] **After deleting a wish, every contribution to it still exists**
+- [x] **After deleting a wish, the owner's derived total from those contributions is unchanged**
+- [x] A deleted wish is absent from ordinary queries, including the profile grid and the wish count chip
+- [x] The contributions foreign key still cascades on a force delete, which remains the deliberate purge path
+- [x] Deleting asks for confirmation before it fires
+- [x] `.scratch/contributions/issues/05` is updated to reflect that the wish half is done
+- [x] `php artisan migrate:fresh --seed` completes, Pint clean, larastan clean

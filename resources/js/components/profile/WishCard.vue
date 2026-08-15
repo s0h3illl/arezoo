@@ -2,20 +2,25 @@
 import { ProgressIndicator, ProgressRoot } from 'reka-ui';
 import { computed } from 'vue';
 
+import DeleteWishDialog from '@/components/profile/DeleteWishDialog.vue';
 import { formatNumber, formatShare, formatToman, shareOf } from '@/lib/format';
 import type { Wish } from '@/types';
 
 /**
- * Only the five fields the card renders, rather than the whole `Wish` it is
- * handed. The narrowing is the card's contract: it says what a caller must
- * supply, and keeps a column added to the table from silently becoming
- * something this component is assumed to show.
+ * Only the fields the card renders, rather than the whole `Wish` it is handed.
+ * The narrowing is the card's contract: it says what a caller must supply, and
+ * keeps a column added to the table from silently becoming something this
+ * component is assumed to show.
+ *
+ * `deletable` is the page's answer, not the card's guess: the profile is told by
+ * the server whose it is, and passes that down.
  */
 const props = defineProps<{
     wish: Pick<
         Wish,
-        'title' | 'description' | 'thumbnail' | 'price' | 'received'
+        'id' | 'title' | 'description' | 'thumbnail' | 'price' | 'received'
     >;
+    deletable: boolean;
 }>();
 
 /**
@@ -100,6 +105,13 @@ const barWidth = computed(
                 <p class="text-emerald-600">
                     {{ formatShare(wish.received, wish.price) }}
                 </p>
+            </div>
+
+            <div
+                v-if="deletable"
+                class="mt-auto flex justify-end border-t border-slate-100 pt-3"
+            >
+                <DeleteWishDialog :wish="wish" />
             </div>
         </div>
     </article>

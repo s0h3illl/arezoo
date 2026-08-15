@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
 /**
@@ -22,6 +23,7 @@ use Illuminate\Support\Carbon;
  * @property int $price
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read User $owner
  * @property-read Collection<int, Contribution> $contributions
  * @property-read int|null $received_total
@@ -30,6 +32,14 @@ class Wish extends Model
 {
     /** @use HasFactory<WishFactory> */
     use HasFactory;
+
+    /**
+     * `contributions.wish_id` cascades, and balances are derived from exactly
+     * those rows (ADR-0005), so a real delete would shrink money an owner had
+     * already earned. A soft delete never fires the foreign key, leaving it to
+     * `forceDelete()` — the full-purge path of ADR-0003.
+     */
+    use SoftDeletes;
 
     protected $guarded = [];
 
