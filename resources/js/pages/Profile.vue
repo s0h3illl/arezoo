@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, InfiniteScroll } from '@inertiajs/vue3';
+import { Head, InfiniteScroll, usePage } from '@inertiajs/vue3';
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
 import { computed } from 'vue';
 
@@ -13,16 +13,28 @@ defineOptions({ layout: AppLayout });
 
 const props = defineProps<{
     /**
-     * Whose profile this is. The controller hands over `$user->only([...])`
-     * rather than the whole user, so this narrows the shape it narrows —
-     * anything wider would publish a stranger's email to every visitor.
+     * Whose profile this is, as `App\Http\Resources\UserResource` publishes
+     * them — the whole public shape, which is already only what any visitor may
+     * see.
      */
-    user: Pick<User, 'name' | 'username' | 'avatar' | 'bio'>;
-    /** Decided from the session, never from anything the browser can set. */
-    is_owner: boolean;
+    user: User;
     /** One page of the grid at a time; `<InfiniteScroll>` asks for the rest. */
     wishes: Paginated<Wish>;
 }>();
+
+const page = usePage();
+
+/**
+ * Whether the reader is looking at their own profile.
+ *
+ * Asked here rather than answered by the server, because the cards below ask the
+ * same question of each wish they hold and two answers to one question can
+ * disagree. Nothing is protected by this: adding, editing and deleting are all
+ * authorised server-side, and this only decides what is worth drawing.
+ */
+const isOwner = computed(
+    () => page.props.auth.user?.id === props.user.id,
+);
 
 /**
  * The letter that stands in for a picture nobody has uploaded yet.
@@ -102,7 +114,7 @@ const initial = computed(() => [...props.user.name][0] ?? '');
                     be the thing that opens it for focus to come back here when
                     it closes.
                 -->
-                <AddWishDialog v-if="is_owner" />
+                <AddWishDialog v-if="isOwner" />
             </header>
 
             <!--
@@ -115,14 +127,14 @@ const initial = computed(() => [...props.user.name][0] ?? '');
             >
                 <p class="text-base font-bold text-slate-900">
                     {{
-                        is_owner
+                        isOwner
                             ? 'هنوز آرزویی اضافه نکردی'
                             : 'هنوز آرزویی اینجا نیست'
                     }}
                 </p>
                 <p class="mt-2 text-sm text-slate-500">
                     {{
-                        is_owner
+                        isOwner
                             ? 'اولین آرزوت رو اضافه کن تا این صفحه آماده‌ی فرستادن باشه.'
                             : 'هر وقت آرزویی اضافه بشه، همین‌جا می‌بینیش.'
                     }}
@@ -143,7 +155,7 @@ const initial = computed(() => [...props.user.name][0] ?? '');
                         v-for="wish in wishes.data"
                         :key="wish.id"
                         :wish="wish"
-                        :deletable="is_owner"
+                        :deletable="isOwner"
                     />
                 </div>
             </InfiniteScroll>

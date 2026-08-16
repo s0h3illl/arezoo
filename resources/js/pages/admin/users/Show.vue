@@ -7,19 +7,18 @@ import TextField from '@/components/TextField.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { index, update } from '@/routes/admin/users';
 import { update as updatePassword } from '@/routes/admin/users/password';
-import type { User } from '@/types';
+import type { User } from '@/types/admin';
 
 defineOptions({ layout: AdminLayout });
 
-/**
- * One user in full, mirroring `App\Http\Resources\Admin\UserResource`.
- *
- * Derived from `User` rather than written out again: a field that changes shape
- * cannot come to mean one thing here and another everywhere else.
+/*
+ * The panel's own `User`, from `@/types/admin`, mirroring
+ * `App\Http\Resources\Admin\UserResource`. It is not derived from the public
+ * `User` in `@/types`: that one carries only what the app is willing to publish
+ * to any page, and the email address and blocked flag this screen is built
+ * around are exactly what it leaves out.
  */
-type AdminUserDetail = Omit<User, 'is_admin' | 'updated_at'>;
-
-const props = defineProps<{ user: AdminUserDetail }>();
+const props = defineProps<{ user: User }>();
 
 /**
  * The first date the app shows anyone.

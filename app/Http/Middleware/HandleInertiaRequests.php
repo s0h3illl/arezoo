@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,7 +40,9 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user() === null
+                    ? null
+                    : new UserResource($request->user()),
             ],
             // The error page shares these props from outside the `web` group, where a
             // 404 never started a session, so reaching for the store would throw.

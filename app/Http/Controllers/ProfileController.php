@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UserResource;
 use App\Http\Resources\WishResource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,8 +21,7 @@ class ProfileController extends Controller
     public function __invoke(Request $request, User $user): Response
     {
         return Inertia::render('Profile', [
-            'user' => $user->only(['name', 'username', 'avatar', 'bio']),
-            'is_owner' => auth()->user()?->id == $user->id,
+            'user' => new UserResource($user),
             'wishes' => Inertia::scroll(fn () => WishResource::collection(
                 $user->wishes()
                     ->withReceivedTotal()

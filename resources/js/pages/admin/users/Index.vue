@@ -5,22 +5,21 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { index, show, update } from '@/routes/admin/users';
-import type { Paginated, User } from '@/types';
+import type { User } from '@/types/admin';
+import type { Paginated } from '@/types';
 
 defineOptions({ layout: AdminLayout });
 
-/**
- * One row of the list, mirroring `App\Http\Resources\Admin\UserResource`.
- *
- * Derived from `User` rather than written out again: a field that changes shape
- * cannot come to mean one thing here and another everywhere else. `created_at`
- * arrives with the rest — the resource also feeds the detail view — and this
- * screen deliberately leaves it unread.
+/*
+ * The panel's own `User`, from `@/types/admin`, mirroring
+ * `App\Http\Resources\Admin\UserResource`. It is not derived from the public
+ * `User` in `@/types`: that one carries only what the app is willing to publish
+ * to any page, and an email address and a blocked flag are exactly what it
+ * leaves out. `created_at` arrives with the rest — the resource also feeds the
+ * detail view — and this screen deliberately leaves it unread.
  */
-type AdminUserRow = Omit<User, 'is_admin' | 'updated_at'>;
-
 const props = defineProps<{
-    users: Paginated<AdminUserRow>;
+    users: Paginated<User>;
     filters: { search: string };
 }>();
 
@@ -54,7 +53,7 @@ onBeforeUnmount(() => clearTimeout(debounceTimer));
  * What clicking the badge would do — a blocked user's badge reads as a state,
  * so the label it cannot show goes on the button itself.
  */
-function blockActionLabel(user: AdminUserRow): string {
+function blockActionLabel(user: User): string {
     return user.is_blocked
         ? `رفع مسدودی ${user.name}`
         : `مسدود کردن ${user.name}`;
@@ -66,7 +65,7 @@ function blockActionLabel(user: AdminUserRow): string {
  * The browser's own dialog is the confirmation step for now — blocking reaches a
  * real person, so it is never one click. A designed modal replaces this later.
  */
-function toggleBlock(user: AdminUserRow): void {
+function toggleBlock(user: User): void {
     const question = user.is_blocked
         ? `مسدودی ${user.name} برداشته بشه؟`
         : `${user.name} مسدود بشه؟ از این به بعد نمی‌تونه وارد بشه.`;

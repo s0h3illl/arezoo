@@ -83,24 +83,31 @@ test('the panel still resolves a user by primary key, and never by username', fu
 });
 
 /*
-| Who is reading. The owner gets a button nobody else does, so the page is told
-| whose it is by the server — never by a flag the browser could set for itself.
+| Who is reading. The owner gets controls nobody else does, and the page works
+| that out by comparing the profile it is showing against the signed-in user it
+| was shared — so these assert the two ids the answer is made of, rather than a
+| flag. Nothing is protected by either: every write is authorised server-side.
 */
-test('an owner is told the profile is theirs', function () {
+test('an owner reads a profile whose id matches their own', function () {
     $sara = User::factory()->create(['username' => 'sara']);
     $this->actingAs($sara);
 
     $this->get(route('profile', 'sara'))->assertInertia(
-        fn (AssertableInertia $page) => $page->where('is_owner', true)
+        fn (AssertableInertia $page) => $page
+            ->where('user.id', $sara->id)
+            ->where('auth.user.id', $sara->id)
     );
 });
 
 test('a signed-in visitor does not own the profile they are reading', function () {
-    User::factory()->create(['username' => 'sara']);
-    $this->actingAs(User::factory()->create(['username' => 'reza']));
+    $sara = User::factory()->create(['username' => 'sara']);
+    $reza = User::factory()->create(['username' => 'reza']);
+    $this->actingAs($reza);
 
     $this->get(route('profile', 'sara'))->assertInertia(
-        fn (AssertableInertia $page) => $page->where('is_owner', false)
+        fn (AssertableInertia $page) => $page
+            ->where('user.id', $sara->id)
+            ->where('auth.user.id', $reza->id)
     );
 });
 
@@ -108,7 +115,43 @@ test('a guest owns no profile', function () {
     User::factory()->create(['username' => 'sara']);
 
     $this->get(route('profile', 'sara'))->assertInertia(
-        fn (AssertableInertia $page) => $page->where('is_owner', false)
+        fn (AssertableInertia $page) => $page->where('auth.user', null)
+    );
+});
+
+/*
+| The shared user prop used to be the whole model, which put every reader's own
+| email, staff flag and timestamps into the HTML of every page in the app. This
+| is the assertion that stops it coming back.
+*/
+test('the shared user carries nothing the frontend has no business seeing', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get(route('home'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->has('auth.user', fn (AssertableInertia $user) => $user
+                ->hasAll(['id', 'name', 'username', 'avatar', 'bio'])
+                ->missingAll([
+                    'email',
+                    'email_verified_at',
+                    'is_admin',
+                    'is_blocked',
+                    'created_at',
+                    'updated_at',
+                ])
+            )
+    );
+});
+
+test('a profile publishes nothing about its owner beyond the public shape', function () {
+    User::factory()->create(['username' => 'sara']);
+
+    $this->get(route('profile', 'sara'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->has('user', fn (AssertableInertia $user) => $user
+                ->hasAll(['id', 'name', 'username', 'avatar', 'bio'])
+                ->missingAll(['email', 'is_admin', 'is_blocked'])
+            )
     );
 });
 
