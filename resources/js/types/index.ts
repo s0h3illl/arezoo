@@ -5,5 +5,6 @@ export * from './faq';
 export * from './nav';
 export * from './pagination';
 export * from './payment';
+export * from './toast';
 export * from './user';
 export * from './wish';

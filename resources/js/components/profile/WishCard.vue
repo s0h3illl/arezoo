@@ -2,7 +2,9 @@
 import { ProgressIndicator, ProgressRoot } from 'reka-ui';
 import { computed } from 'vue';
 
+import ShareIcon from '@/components/icons/ShareIcon.vue';
 import DeleteWishDialog from '@/components/profile/DeleteWishDialog.vue';
+import { shareProfile } from '@/composables/useShare';
 import { formatNumber, formatShare, formatToman, shareOf } from '@/lib/format';
 import type { Wish } from '@/types';
 
@@ -46,8 +48,8 @@ const barWidth = computed(
     <!--
         Inert on purpose. The wish arrives carrying its `purchase_link` and this
         card declines to render it: the link belongs to the wish detail page, and
-        a card-wide click target would swallow the delete and share buttons that
-        land on this footer later.
+        a card-wide click target would swallow the delete and share buttons on
+        the footer below.
     -->
     <article
         class="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)]"
@@ -108,10 +110,25 @@ const barWidth = computed(
             </div>
 
             <div
-                v-if="deletable"
-                class="mt-auto flex justify-end border-t border-slate-100 pt-3"
+                class="mt-auto flex items-center justify-end gap-1 border-t border-slate-100 pt-3"
             >
-                <DeleteWishDialog :wish="wish" />
+                <DeleteWishDialog v-if="deletable" :wish="wish" />
+
+                <!--
+                    The icon is drawn a size larger than the one beside it, so
+                    the button settles the matter for both rather than the
+                    marketing page's copy of it being resized to suit a card.
+                -->
+                <a
+                    href="#"
+                    data-test="share"
+                    aria-label="اشتراک لینک پروفایل"
+                    class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600 [&>svg]:size-[18px]"
+                    @click.prevent="shareProfile()"
+                >
+                    <ShareIcon />
+                    اشتراک
+                </a>
             </div>
         </div>
     </article>
