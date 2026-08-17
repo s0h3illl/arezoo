@@ -1,39 +1,39 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import { ProgressIndicator, ProgressRoot } from 'reka-ui';
 import { computed } from 'vue';
 
 import ShareIcon from '@/components/icons/ShareIcon.vue';
 import DeleteWishDialog from '@/components/profile/DeleteWishDialog.vue';
+import EditWishDialog from '@/components/profile/EditWishDialog.vue';
 import { shareProfile } from '@/composables/useShare';
 import { formatNumber, formatShare, formatToman, shareOf } from '@/lib/format';
 import type { Wish } from '@/types';
 
 /**
- * Only the fields the card renders, rather than the whole `Wish` it is handed.
- * The narrowing is the card's contract: it says what a caller must supply, and
- * keeps a column added to the table from silently becoming something this
- * component is assumed to show.
- *
- * `deletable` is the page's answer, not the card's guess: the profile is told by
- * the server whose it is, and passes that down.
+ * What the card draws, and what its edit dialog changes — which is why
+ * `purchase_link` is here and still never rendered. The narrowing is the card's
+ * contract: it says what a caller must supply, and keeps a column added to the
+ * table from silently becoming something this component is assumed to handle.
  */
 const props = defineProps<{
     wish: Pick<
         Wish,
-        'id' | 'title' | 'description' | 'thumbnail' | 'price' | 'received'
+        | 'id'
+        | 'user_id'
+        | 'title'
+        | 'description'
+        | 'thumbnail'
+        | 'purchase_link'
+        | 'price'
+        | 'received'
     >;
-    deletable: boolean;
 }>();
 
-/**
- * The bar clamps at full and the figures below it do not.
- *
- * Contributions are uncapped (ADR-0004), so a wish may hold more than its
- * price. Passing the clamped amount as the value with the price as the maximum
- * gives both the full bar and reka-ui's `data-state="complete"` in one go; the
- * true amount is published beside it, because the bar is a gauge and the
- * figures are the record.
- */
+const page = usePage();
+
+const isOwn = computed(() => page.props.auth.user?.id === props.wish.user_id);
+
 const barValue = computed(() =>
     Math.min(props.wish.received, props.wish.price),
 );
@@ -45,12 +45,6 @@ const barWidth = computed(
 </script>
 
 <template>
-    <!--
-        Inert on purpose. The wish arrives carrying its `purchase_link` and this
-        card declines to render it: the link belongs to the wish detail page, and
-        a card-wide click target would swallow the delete and share buttons on
-        the footer below.
-    -->
     <article
         class="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)]"
     >
@@ -71,10 +65,6 @@ const barWidth = computed(
                 {{ wish.title }}
             </h3>
 
-            <!--
-                Absent on a wish that was added without one — the column is
-                nullable, because only the title and the price are asked for.
-            -->
             <p
                 v-if="wish.description"
                 class="mt-2 line-clamp-2 text-sm leading-loose text-slate-500"
@@ -110,15 +100,10 @@ const barWidth = computed(
             </div>
 
             <div
-                class="mt-auto flex items-center justify-end gap-1 border-t border-slate-100 pt-3"
+                class="mt-auto flex items-center gap-1 border-t border-slate-100 pt-3"
             >
-                <DeleteWishDialog v-if="deletable" :wish="wish" />
+                <EditWishDialog v-if="isOwn" :wish="wish" />
 
-                <!--
-                    The icon is drawn a size larger than the one beside it, so
-                    the button settles the matter for both rather than the
-                    marketing page's copy of it being resized to suit a card.
-                -->
                 <a
                     href="#"
                     data-test="share"
@@ -129,6 +114,10 @@ const barWidth = computed(
                     <ShareIcon />
                     اشتراک
                 </a>
+
+                <div v-if="isOwn" class="ms-auto">
+                    <DeleteWishDialog :wish="wish" />
+                </div>
             </div>
         </div>
     </article>

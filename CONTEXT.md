@@ -5,7 +5,7 @@ A wishlist app where people publish wishes and others help pay for them.
 ## Language
 
 **Wish**:
-An item a user wants, published so others can put money towards it.
+An item a user wants, published so others can put money towards it. Its details are the owner's to change at any time, whatever has been received (ADR-0009), so its price is a target rather than a commitment.
 
 **Contribution**:
 Money a contributor has put towards a wish. Exists only while the money is real or in flight — a failed attempt leaves no contribution behind.

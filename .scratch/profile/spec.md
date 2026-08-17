@@ -138,7 +138,7 @@ Deleting is where this feature touches money. An owner may delete any wish at an
 - **The account-settings screen** — changing name, username, email, password, avatar, or bio. The columns exist; the screen does not.
 - **The wish detail page**, and with it `purchase_link` appearing anywhere in the UI. Explicitly planned as the next piece of work.
 - **Contributing to a wish.** The profile shows how much has been raised and offers no way to add to it.
-- **Editing a wish.** Wishes can be created and deleted, not changed.
+- **Editing a wish.** Wishes can be created and deleted, not changed. — *Superseded: editing is specified in `.scratch/edit-a-wish/spec.md` and decided in ADR-0009.*
 - Restoring a soft-deleted wish, and any UI that reveals one exists.
 - User soft-deletes — still `.scratch/contributions/issues/05`.
 - Per-wish or per-profile privacy, and any notion of a wish being fulfilled or closed.

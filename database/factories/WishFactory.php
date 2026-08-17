@@ -15,11 +15,6 @@ use RuntimeException;
 class WishFactory extends Factory
 {
     /**
-     * The storage path of the fixture thumbnail shared by every created wish.
-     */
-    protected static ?string $thumbnail = null;
-
-    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -30,21 +25,21 @@ class WishFactory extends Factory
             'user_id' => User::factory(),
             'title' => fake()->words(3, true),
             'description' => fake()->paragraph(),
-            'thumbnail' => static::$thumbnail ??= $this->storeThumbnail(),
+            'thumbnail' => $this->storeThumbnail(),
             'purchase_link' => fake()->url(),
-            'price' => fake()->numberBetween(5, 2_000) * 1_000,
+            'price' => fake()->numberBetween(100, 2_000) * 1_000,
         ];
     }
 
     /**
-     * Store the fixture thumbnail on the public disk.
+     * Store a copy of the fixture cover on the public disk, for this wish alone.
      *
      * @throws RuntimeException when the fixture cannot be written to the disk.
      */
     protected function storeThumbnail(): string
     {
         $path = Storage::disk('public')->putFile(
-            'wishes', new File(base_path('tests/fixtures/thumbnail.jpg'))
+            'wishes', new File(base_path('tests/fixtures/wish-cover.jpg'))
         );
 
         if ($path === false) {

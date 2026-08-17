@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreWishRequest;
+use App\Http\Requests\UpdateWishRequest;
 use App\Models\Wish;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class WishController extends Controller
 {
@@ -29,6 +32,43 @@ class WishController extends Controller
         ]);
 
         return to_route('profile', $owner->username);
+    }
+
+    public function update(UpdateWishRequest $request, Wish $wish): RedirectResponse
+    {
+        $wish->update([
+            ...$request->safe()->only(['title', 'description', 'purchase_link', 'price']),
+            ...$this->thumbnailChange($request, $wish),
+        ]);
+
+        return to_route('profile', $request->user()->username);
+    }
+
+    /**
+     * @return array<string, string|null>
+     *
+     * @throws RuntimeException when the replacement cannot be written to the disk.
+     */
+    private function thumbnailChange(UpdateWishRequest $request, Wish $wish): array
+    {
+        $replacement = $request->file('thumbnail');
+        $isRemoving = $request->boolean('remove_thumbnail');
+
+        if ($replacement === null && ! $isRemoving) {
+            return [];
+        }
+
+        $stored = $replacement?->store('wishes', 'public');
+
+        if ($stored === false) {
+            throw new RuntimeException('Unable to store the replacement wish cover.');
+        }
+
+        if ($wish->thumbnail !== null) {
+            Storage::disk('public')->delete($wish->thumbnail);
+        }
+
+        return ['thumbnail' => $stored];
     }
 
     public function destroy(Request $request, Wish $wish): RedirectResponse
