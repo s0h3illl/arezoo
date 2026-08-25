@@ -104,6 +104,11 @@ class Wish extends Model
         $query->withSum('paidContributions as received_total', 'amount');
     }
 
+    public function loadReceivedTotal(): static
+    {
+        return $this->loadSum('paidContributions as received_total', 'amount');
+    }
+
     /**
      * How many people have paid towards this wish.
      *

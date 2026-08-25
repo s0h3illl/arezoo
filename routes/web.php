@@ -15,6 +15,8 @@ Route::post('wishes', [WishController::class, 'store'])
     ->middleware('auth')
     ->name('wishes.store');
 
+Route::get('wishes/{wish}', [WishController::class, 'show'])->name('wishes.show');
+
 Route::put('wishes/{wish}', [WishController::class, 'update'])
     ->middleware('auth')
     ->can('update', 'wish')

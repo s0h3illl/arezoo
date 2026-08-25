@@ -34,7 +34,8 @@ Anyone reading a profile that is not theirs, whether they are signed in or not. 
 _Avoid_: Guest (which means signed out, whosever profile they are reading)
 
 **Visibility**:
-Who can see a contribution's contributor details (name, amount, message) — never whether its money counts. `public`: everyone. `owner`: only the wish's owner. `hidden`: no one, not even the owner.
+Who can see *who* made a contribution — never how much, and never whether its money counts (ADR-0010). `public`: everyone. `owner`: only the wish's owner. `hidden`: no one, not even the owner. A contribution's amount is always shown, attributed to no one when its contributor is hidden.
+A message is narrower still: only ever the wish's owner reads one, and only while the contributor is visible to them — under `hidden` it stays unread too, since a message can name the person the setting exists to conceal.
 
 **Toman**:
 The unit of every money value in the app. Rial appears only at the payment-gateway boundary.

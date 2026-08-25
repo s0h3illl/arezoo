@@ -4,24 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreWishRequest;
 use App\Http\Requests\UpdateWishRequest;
+use App\Http\Resources\ContributionResource;
+use App\Http\Resources\UserResource;
+use App\Http\Resources\WishResource;
 use App\Models\Wish;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
 use RuntimeException;
 
 class WishController extends Controller
 {
-    /**
-     * Publish a wish to the signed-in user's own profile.
-     *
-     * The wish is created through the owner's relation, so it belongs to whoever
-     * the session says is here rather than to anything the body claims.
-     *
-     * The response is a redirect to that profile, and the new wish is simply in
-     * the refreshed props. Nothing is inserted optimistically: the server is the
-     * truth, so the grid cannot disagree with the database.
-     */
+    private const int CONTRIBUTIONS_PER_PAGE = 5;
+
     public function store(StoreWishRequest $request): RedirectResponse
     {
         $owner = auth()->user();
@@ -32,6 +29,23 @@ class WishController extends Controller
         ]);
 
         return to_route('profile', $owner->username);
+    }
+
+    public function show(Wish $wish): Response
+    {
+        $wish->loadReceivedTotal();
+        $wish->load('owner');
+
+        return Inertia::render('WishDetail', [
+            'wish' => new WishResource($wish),
+            'owner' => new UserResource($wish->owner),
+            'contributions' => Inertia::scroll(fn () => ContributionResource::collection(
+                $wish->paidContributions()
+                    ->with(['contributor', 'wish'])
+                    ->orderByDesc('settled_at')
+                    ->paginate(self::CONTRIBUTIONS_PER_PAGE)
+            )),
+        ]);
     }
 
     public function update(UpdateWishRequest $request, Wish $wish): RedirectResponse

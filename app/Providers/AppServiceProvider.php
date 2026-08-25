@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Models\Wish;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -57,6 +58,10 @@ class AppServiceProvider extends ServiceProvider
             ->excludingBlocked()
             ->withUsername($value)
             ->firstOrFail());
+
+        Route::bind('wish', fn (string $value): Wish => Wish::query()
+            ->whereIn('user_id', User::query()->excludingBlocked()->select('id'))
+            ->findOrFail($value));
     }
 
     /**

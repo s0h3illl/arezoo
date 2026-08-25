@@ -10,33 +10,16 @@ use Illuminate\Support\Facades\Storage;
 use LogicException;
 
 /**
- * A wish as the application reads it — every column of the `wishes` table.
- *
- * One resource for the whole model rather than one per screen. A screen that
- * wants less narrows what it declares where it uses it, so a field added to the
- * table reaches every page at once instead of being threaded through a new
- * shape each time. The profile grid renders a handful of these; see
- * `WishCard.vue`, whose prop is a `Pick<Wish, …>` of exactly the ones it draws.
- *
- * `received` is read from the `received_total` the grid's one aggregate brings
- * along — see `Wish::withReceivedTotal()`. It is uncapped (ADR-0004), so a wish
- * may report more than its price.
- *
  * @mixin Wish
  */
 class WishResource extends JsonResource
 {
     /**
-     * A single wish is handed to Inertia as the prop itself, not as an envelope.
-     * See `App\Http\Resources\Admin\UserResource::$wrap` for why.
-     *
      * @var string|null
      */
     public static $wrap = null;
 
     /**
-     * Transform the resource into an array.
-     *
      * @return array{id: int, user_id: int, title: string, description: ?string, thumbnail: ?string, purchase_link: ?string, price: int, received: int, created_at: ?Carbon, updated_at: ?Carbon}
      *
      * @throws LogicException when the grid's aggregate was never loaded.
