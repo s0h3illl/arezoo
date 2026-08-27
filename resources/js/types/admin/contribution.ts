@@ -3,6 +3,9 @@
  * list. `App\Http\Resources\Admin\ContributionResource` is deliberately
  * narrower than the `contributions` table: no message, no visibility, since
  * visibility governs what a user sees, never what moderation can see.
+ *
+ * It shares a name with the public `Contribution` in `@/types` and is told
+ * apart by the namespace, exactly as the two resources are on the server.
  */
 export type ContributionStatus = 'pending' | 'paid';
 

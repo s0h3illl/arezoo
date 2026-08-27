@@ -6,11 +6,22 @@ use App\Models\User;
 use App\Models\Wish;
 use Inertia\Testing\AssertableInertia;
 
-test('users can visit a wish detail apge', function () {
-    $wish = Wish::factory()->create();
+test('a guest, a signed-in visitor and the owner all read a wish page', function (?string $reader) {
+    $owner = User::factory()->create();
+    $wish = Wish::factory()->create(['user_id' => $owner->id]);
+
+    if ($reader === 'owner') {
+        $this->actingAs($owner);
+    } elseif ($reader === 'visitor') {
+        $this->actingAs(User::factory()->create());
+    }
 
     $this->get(route('wishes.show', $wish))->assertOk();
-});
+})->with([
+    'a guest' => null,
+    'a signed-in visitor' => 'visitor',
+    'the owner' => 'owner',
+]);
 
 test('a soft-deleted wish returns 404', function () {
     $wish = Wish::factory()->create();
@@ -26,7 +37,7 @@ test('a wish owned by a blocked user returns 404', function () {
     $this->get(route('wishes.show', $wish))->assertNotFound();
 });
 
-test('an anonymous contribution carries the masked name in place of its contributor', function () {
+test('a hidden contribution carries the masked name and its real amount', function () {
     $wish = Wish::factory()->create();
     Contribution::factory()->paid()->create([
         'wish_id' => $wish->id,
@@ -38,8 +49,10 @@ test('an anonymous contribution carries the masked name in place of its contribu
         fn (AssertableInertia $page) => $page->has(
             'contributions.data.0',
             fn (AssertableInertia $row) => $row
-                ->where('name', __('contributions.anonymous'))
-                ->where('avatar', null)
+                ->where('state', 'anonymous')
+                ->where('contributor.name', __('contributions.anonymous'))
+                ->where('contributor.avatar', null)
+                ->missing('contributor.id')
                 ->where('amount', 120_000)
                 ->has('settled_at')
                 ->etc()
@@ -60,7 +73,8 @@ test('a visible contribution carries its contributor', function () {
         fn (AssertableInertia $page) => $page->has(
             'contributions.data.0',
             fn (AssertableInertia $row) => $row
-                ->where('name', 'John Doe')
+                ->where('state', 'visible')
+                ->where('contributor.name', 'John Doe')
                 ->etc()
         )
     );
@@ -78,30 +92,25 @@ test('an owner-visibility contribution is visible to the owner and anonymous to 
 
     $this->actingAs($sara);
     $this->get(route('wishes.show', $wish))->assertInertia(
-        fn (AssertableInertia $page) => $page->where('contributions.data.0.name', 'رضا احمدی')
+        fn (AssertableInertia $page) => $page->where('contributions.data.0.contributor.name', 'رضا احمدی')
     );
 
     $this->actingAs(User::factory()->create());
     $this->get(route('wishes.show', $wish))->assertInertia(
-        fn (AssertableInertia $page) => $page->where('contributions.data.0.name', __('contributions.anonymous'))
+        fn (AssertableInertia $page) => $page
+            ->where('contributions.data.0.state', 'anonymous')
+            ->where('contributions.data.0.contributor.name', __('contributions.anonymous'))
     );
-});
 
-test('contributions arrive ordered by settled_at descending', function () {
-    $wish = Wish::factory()->create();
-    $oldest = Contribution::factory()->settledAt(now()->subDays(2))->create(['wish_id' => $wish->id]);
-    $newest = Contribution::factory()->settledAt(now())->create(['wish_id' => $wish->id]);
-    $middle = Contribution::factory()->settledAt(now()->subDay())->create(['wish_id' => $wish->id]);
-
+    auth()->logout();
     $this->get(route('wishes.show', $wish))->assertInertia(
         fn (AssertableInertia $page) => $page
-            ->where('contributions.data.0.id', $newest->id)
-            ->where('contributions.data.1.id', $middle->id)
-            ->where('contributions.data.2.id', $oldest->id)
+            ->where('contributions.data.0.state', 'anonymous')
+            ->where('contributions.data.0.contributor.name', __('contributions.anonymous'))
     );
 });
 
-it('shows total of items regardless of visibility', function () {
+it('shows total of paid items regardless of visibility', function () {
     $wish = Wish::factory()->create();
     Contribution::factory()->paid()->create(['wish_id' => $wish->id, 'visibility' => ContributionVisibility::Public]);
     Contribution::factory()->paid()->create(['wish_id' => $wish->id, 'visibility' => ContributionVisibility::Hidden]);

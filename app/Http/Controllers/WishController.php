@@ -17,7 +17,7 @@ use RuntimeException;
 
 class WishController extends Controller
 {
-    private const int CONTRIBUTIONS_PER_PAGE = 5;
+    private const int CONTRIBUTIONS_PER_PAGE = 7;
 
     public function store(StoreWishRequest $request): RedirectResponse
     {
@@ -36,7 +36,7 @@ class WishController extends Controller
         $wish->loadReceivedTotal();
         $wish->load('owner');
 
-        return Inertia::render('WishDetail', [
+        return Inertia::render('wishes/Show', [
             'wish' => new WishResource($wish),
             'owner' => new UserResource($wish->owner),
             'contributions' => Inertia::scroll(fn () => ContributionResource::collection(

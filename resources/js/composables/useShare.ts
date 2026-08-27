@@ -1,10 +1,7 @@
 import { raiseToast } from '@/composables/useToast';
 
-export async function shareProfile(): Promise<void> {
-    await share('#');
-}
-
-async function share(path: string): Promise<void> {
+/** The native share sheet where there is one, the clipboard everywhere else. */
+export async function shareLink(path: string): Promise<void> {
     const url = new URL(path, window.location.href).href;
 
     try {

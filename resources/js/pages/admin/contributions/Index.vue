@@ -4,7 +4,8 @@ import { Head } from '@inertiajs/vue3';
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { formatMoment, formatToman } from '@/lib/format';
-import type { Contribution, ContributionStatus, Paginated } from '@/types';
+import type { Paginated } from '@/types';
+import type { Contribution, ContributionStatus } from '@/types/admin';
 
 defineOptions({ layout: AdminLayout });
 

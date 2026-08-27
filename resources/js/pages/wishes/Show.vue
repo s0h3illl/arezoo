@@ -144,24 +144,21 @@ const purchaseHost = computed(() => {
                         rel="noopener"
                         class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3.5 transition-colors hover:border-emerald-200 hover:bg-emerald-50"
                     >
-                        <span
+                        <div
                             class="flex size-[38px] shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 [&>svg]:size-[18px]"
                         >
                             <LinkIcon />
-                        </span>
-                        <span class="min-w-0 flex-1">
+                        </div>
+                        <div class="flex items-center justify-between w-full">
                             <span
-                                class="block text-[13.5px] font-extrabold text-slate-900"
+                                class="text-[13.5px] font-extrabold text-slate-900"
                             >
                                 لینک خرید محصول
                             </span>
-                            <span
-                                dir="ltr"
-                                class="block truncate text-start text-xs text-slate-400"
-                            >
+                            <span class="truncate text-xs text-slate-400">
                                 {{ purchaseHost }}
                             </span>
-                        </span>
+                        </div>
                     </a>
                 </div>
             </article>

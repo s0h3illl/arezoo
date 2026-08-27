@@ -6,7 +6,6 @@ use App\Enums\ContributionVisibility;
 use App\Models\Contribution;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Carbon;
 
 /**
  * @mixin Contribution
@@ -19,7 +18,7 @@ class ContributionResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * @return array{id: int, name: string, avatar: ?string, amount: int, settled_at: ?Carbon}
+     * @return array{id: int, state: 'visible'|'anonymous', contributor: array{name: string, avatar: ?string}, amount: int, settled_at: ?string}
      */
     public function toArray(Request $request): array
     {
@@ -27,10 +26,17 @@ class ContributionResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'name' => $visible ? $this->contributor->name : $this->maskedName(),
-            'avatar' => $visible ? $this->contributor->avatar : null,
+            'state' => $visible ? 'visible' : 'anonymous',
+            /*
+             * No `id`: nothing links to a contributor's profile, and leaving it
+             * out means a masked row cannot be traced back to a user at all.
+             */
+            'contributor' => [
+                'name' => $visible ? $this->contributor->name : $this->maskedName(),
+                'avatar' => $visible ? $this->contributor->avatar : null,
+            ],
             'amount' => $this->amount,
-            'settled_at' => $this->settled_at,
+            'settled_at' => $this->settled_at?->diffForHumans(),
         ];
     }
 
@@ -41,7 +47,7 @@ class ContributionResource extends JsonResource
         }
 
         if ($this->visibility === ContributionVisibility::OwnerOnly) {
-           return $this->isOwner();
+            return $this->isOwner();
         }
 
         return false;

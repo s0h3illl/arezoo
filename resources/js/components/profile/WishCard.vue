@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { ProgressIndicator, ProgressRoot } from 'reka-ui';
 import { computed } from 'vue';
 
 import ShareIcon from '@/components/icons/ShareIcon.vue';
 import DeleteWishDialog from '@/components/profile/DeleteWishDialog.vue';
 import EditWishDialog from '@/components/profile/EditWishDialog.vue';
-import { shareProfile } from '@/composables/useShare';
+import { shareLink } from '@/composables/useShare';
 import { formatNumber, formatShare, formatToman, shareOf } from '@/lib/format';
+import { show } from '@/routes/wishes';
 import type { Wish } from '@/types';
 
 /**
@@ -48,21 +49,27 @@ const barWidth = computed(
     <article
         class="flex flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)]"
     >
-        <img
-            v-if="wish.thumbnail"
-            :src="wish.thumbnail"
-            alt=""
-            class="aspect-[4/3] w-full object-cover"
-        />
-        <div
-            v-else
-            aria-hidden="true"
-            class="aspect-[4/3] w-full wish-cover-placeholder"
-        ></div>
+        <Link :href="show(wish.id)" tabindex="-1" aria-hidden="true">
+            <img
+                v-if="wish.thumbnail"
+                :src="wish.thumbnail"
+                alt=""
+                class="aspect-[4/3] w-full object-cover"
+            />
+            <div
+                v-else
+                class="aspect-[4/3] w-full wish-cover-placeholder"
+            ></div>
+        </Link>
 
         <div class="flex flex-1 flex-col p-5">
             <h3 class="text-base font-extrabold text-slate-900">
-                {{ wish.title }}
+                <Link
+                    :href="show(wish.id)"
+                    class="transition-colors hover:text-emerald-600 focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
+                >
+                    {{ wish.title }}
+                </Link>
             </h3>
 
             <p
@@ -107,9 +114,9 @@ const barWidth = computed(
                 <a
                     href="#"
                     data-test="share"
-                    aria-label="اشتراک لینک پروفایل"
+                    aria-label="اشتراک لینک آرزو"
                     class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-bold text-slate-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600 [&>svg]:size-[18px]"
-                    @click.prevent="shareProfile()"
+                    @click.prevent="shareLink(show(wish.id).url)"
                 >
                     <ShareIcon />
                     اشتراک
