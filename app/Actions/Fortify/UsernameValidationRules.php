@@ -21,8 +21,10 @@ trait UsernameValidationRules
     protected const RESERVED_USERNAMES = [
         'admin',
         'api',
+        'arezoo',
         'email',
         'forgot-password',
+        'help',
         'login',
         'logout',
         'password',
@@ -31,6 +33,7 @@ trait UsernameValidationRules
         'reset-password',
         'settings',
         'storage',
+        'support',
         'terms',
         'u',
         'up',
@@ -47,7 +50,7 @@ trait UsernameValidationRules
      *
      * @return array<int, Rule|Closure|array<mixed>|string>
      */
-    protected function usernameRules(): array
+    protected function usernameRules(?User $ignoring = null): array
     {
         return [
             'required',
@@ -55,20 +58,13 @@ trait UsernameValidationRules
             'alpha_dash:ascii',
             'min:3',
             'max:30',
-            $this->validateUsernameIsFree(...),
+            function (string $attribute, mixed $value, Closure $fail) use ($ignoring): void {
+                $this->validateUsernameIsFree($attribute, $value, $fail, $ignoring);
+            },
         ];
     }
 
-    /**
-     * Refuse a username the app keeps for itself, or one somebody already holds.
-     *
-     * Both questions are asked of the lowered username, because lower case is what a
-     * username becomes the moment it is stored. `notIn` and `Rule::unique` each
-     * compare the value exactly as typed, which would let `Admin` past the
-     * reserved list and `Sara` past a held `sara` — the first shadowing a routed
-     * path, the second surviving validation only to break on the unique index.
-     */
-    protected function validateUsernameIsFree(string $attribute, mixed $value, Closure $fail): void
+    protected function validateUsernameIsFree(string $attribute, mixed $value, Closure $fail, ?User $ignoring = null): void
     {
         if (! is_string($value)) {
             return;
@@ -82,7 +78,13 @@ trait UsernameValidationRules
             return;
         }
 
-        if (User::query()->withUsername($username)->exists()) {
+        $holders = User::query()->withUsername($username);
+
+        if ($ignoring !== null) {
+            $holders->whereKeyNot($ignoring->getKey());
+        }
+
+        if ($holders->exists()) {
             $fail('validation.unique')->translate();
         }
     }
