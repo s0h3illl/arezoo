@@ -20,7 +20,7 @@ The prototype is thrown away. What survives is the decision about the layout, re
 
 ## Prototype
 
-**Captured and removed.** Lives on the throwaway branch **`prototype/wish-detail-layout`** (commit `f69ad22`), off the working branch. Nothing prototype-shaped remains on `research/relative-time`. To look at it again: `git checkout prototype/wish-detail-layout`, `composer run dev`, then `/prototype/wish-detail`.
+**Captured, removed, and now gone.** It lived on the throwaway branch `prototype/wish-detail-layout` (commit `f69ad22`), which was **deleted on 2026-09-02**. That commit was never on `main`, so nothing references it any more: it is recoverable from the reflog for roughly 90 days and is then garbage-collected. Treat the decision recorded below as the only surviving record — there is no branch to check out.
 
 What it was — throwaway, local-only, `/prototype/wish-detail`.
 
