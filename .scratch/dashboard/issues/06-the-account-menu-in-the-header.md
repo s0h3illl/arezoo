@@ -23,7 +23,7 @@ Link the prototype from this ticket as an asset. Nothing lands in `resources/js/
 
 ## Answer
 
-**Variant B — the identity card.** The trigger is the user's avatar, and the panel opens with a name / `@username` block above the items. Prototype: branch `prototype/dashboard-account-menu`, `resources/js/components/prototype/`, mounted in the real `AppHeader`, flipped by `?variant=`. Screenshots in `tests/Browser/Screenshots/`. Nothing landed in `resources/js/` on `main`.
+**Variant B — the identity card.** The trigger is the user's avatar, and the panel opens with a name / `@username` block above the items. Prototype: commit `fce8acc`, `resources/js/components/prototype/`, mounted in the real `AppHeader`, flipped by `?variant=`. Screenshots in `tests/Browser/Screenshots/`. **The branch was fast-forwarded into `main` on 2026-09-02, so the prototype components and the `<PrototypeSwitcher />` in `AppLayout` are live on `main`** — the earlier note that nothing landed there is no longer true. Retrieve any variant at any time with `git show fce8acc:resources/js/components/prototype/AccountMenuB.vue`.
 
 ### What the menu is
 

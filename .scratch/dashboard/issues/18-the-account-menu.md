@@ -8,7 +8,7 @@
 
 **Status:** ready-for-agent
 
-Spec: [The account menu](../spec.md). Decision: [The account menu in the header](06-the-account-menu-in-the-header.md), prototyped on branch `prototype/dashboard-account-menu`.
+Spec: [The account menu](../spec.md). Decision: [The account menu in the header](06-the-account-menu-in-the-header.md), prototyped in commit `fce8acc`, now on `main`.
 
 - [ ] The header's bordered user icon becomes a dropdown whose trigger is the user's own round avatar, falling back to a circle carrying the first letter of their name.
 - [ ] The panel opens on a name and `@username` identity block, then the navigation rows with icons, a separator, then sign-out.

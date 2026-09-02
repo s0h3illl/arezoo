@@ -17,14 +17,14 @@ Find out, and report facts rather than a recommendation:
 - If the string is written server-side, what happens to it — a relative string computed at render time goes stale on a page left open, and Inertia will not re-render it. Note whether anything in the app already has this problem.
 - Whichever side writes it, the machine-readable original still has to travel: `format.ts` says callers "put the machine-readable original on a `<time>` element beside whatever these return". Note what shape that implies for the prop.
 
-Capture the findings as a Markdown file in the repo on a throwaway `research/relative-time` branch, and leave a pointer here.
+Capture the findings as a Markdown file in the repo on a throwaway `research/relative-time` branch, and leave a pointer here. (That branch was merged into `main` and deleted on 2026-09-02; the findings file is committed.)
 
 This blocks [What a contributor row shows](03-what-a-contributor-row-shows.md), which cannot decide what a row's date is until it knows what is cheaply available.
 
 ## Answer
 
 Findings: [research/01-relative-time.md](../research/01-relative-time.md), on the
-`research/relative-time` branch. Measured against the installed versions, not read
+`research/relative-time` branch, since merged to `main` and deleted. Measured against the installed versions, not read
 off documentation.
 
 Both routes are already installed and neither needs a dependency.
