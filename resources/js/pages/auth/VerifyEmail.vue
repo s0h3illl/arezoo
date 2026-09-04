@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 import SubmitButton from '@/components/SubmitButton.vue';
+import TextField from '@/components/TextField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { logout } from '@/routes';
+import { update as updateAccount } from '@/routes/user-profile-information';
 import { send } from '@/routes/verification';
+import type { Account } from '@/types';
 
 defineOptions({ layout: AppLayout });
 
-defineProps<{
-    email: string;
+const props = defineProps<{
+    user: Account;
     status?: string;
 }>();
+
+const emailSaved = computed(
+    () => props.status === 'profile-information-updated',
+);
 </script>
 
 <template>
@@ -48,7 +56,7 @@ defineProps<{
                         dir="ltr"
                         class="text-[15px] font-bold text-slate-900"
                     >
-                        {{ email }}
+                        {{ user.email }}
                     </span>
                 </div>
 
@@ -57,8 +65,63 @@ defineProps<{
                 </SubmitButton>
             </Form>
 
+            <section
+                class="mt-6 rounded-[18px] border border-slate-200 bg-white p-5"
+            >
+                <h2 class="text-base font-black text-slate-900">
+                    ایمیلت رو اشتباه زدی؟
+                </h2>
+                <p class="mt-1 text-sm text-slate-500">
+                    نشانی درست رو بنویس تا لینک تأیید به همون‌جا برود.
+                </p>
+
+                <p
+                    v-if="emailSaved"
+                    data-test="email-saved"
+                    class="mt-4 rounded-[14px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700"
+                >
+                    ایمیلت عوض شد.
+                </p>
+
+                <Form
+                    #default="{ errors, processing }"
+                    novalidate
+                    :action="updateAccount.url()"
+                    method="put"
+                    error-bag="updateProfileInformation"
+                    :options="{ preserveScroll: true }"
+                    class="mt-4 flex flex-col gap-4"
+                >
+                    <input type="hidden" name="name" :value="user.name" />
+                    <input
+                        type="hidden"
+                        name="username"
+                        :value="user.username"
+                    />
+
+                    <TextField
+                        id="email"
+                        :model-value="user.email"
+                        name="email"
+                        label="ایمیل"
+                        type="email"
+                        dir="ltr"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        :error="errors.email"
+                    />
+
+                    <SubmitButton
+                        data-test="save-email"
+                        :processing="processing"
+                    >
+                        ذخیره‌ی ایمیل
+                    </SubmitButton>
+                </Form>
+            </section>
+
             <p class="mt-6 text-center text-sm text-slate-500">
-                ایمیلت رو اشتباه زدی؟
+                یا از حسابت خارج شو و از نو شروع کن.
                 <Link
                     :href="logout()"
                     as="button"

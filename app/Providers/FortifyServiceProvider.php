@@ -7,6 +7,7 @@ use App\Actions\Fortify\EnsureUserIsNotBlocked;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Http\Resources\AccountResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
@@ -60,8 +61,8 @@ class FortifyServiceProvider extends ServiceProvider
             'email' => $request->input('email'),
             'token' => $request->route('token'),
         ]));
-        Fortify::verifyEmailView(fn (Request $request): Response => Inertia::render('auth/VerifyEmail', [
-            'email' => $request->user()->email,
+        Fortify::verifyEmailView(fn (): Response => Inertia::render('auth/VerifyEmail', [
+            'user' => new AccountResource(auth()->user()),
         ]));
     }
 }
