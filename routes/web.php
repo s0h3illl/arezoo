@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InboxController;
 use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TermsController;
@@ -14,6 +15,10 @@ Route::get('terms', TermsController::class)->name('terms');
 Route::get('dashboard', DashboardController::class)
     ->middleware('auth')
     ->name('dashboard');
+
+Route::get('dashboard/messages', InboxController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.messages');
 
 Route::delete('profile/avatar', [ProfileAvatarController::class, 'destroy'])
     ->middleware('auth')
