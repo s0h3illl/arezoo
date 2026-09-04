@@ -36,13 +36,14 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user() === null
-                    ? null
-                    : new UserResource($request->user()),
+                'user' => $user === null ? null : new UserResource($user),
+                'isVerified' => $user?->hasVerifiedEmail() ?? false,
             ],
             // The error page shares these props from outside the `web` group, where a
             // 404 never started a session, so reaching for the store would throw.

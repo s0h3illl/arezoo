@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ConfigProvider } from 'reka-ui';
+
 import AppFooter from '@/components/AppFooter.vue';
 import AppHeader from '@/components/AppHeader.vue';
 import AppToaster from '@/components/AppToaster.vue';
@@ -9,11 +11,13 @@ provideHeaderNav();
 </script>
 
 <template>
-    <div dir="rtl" class="flex min-h-screen flex-col bg-slate-50">
-        <AppHeader />
-        <slot />
-        <AppFooter />
+    <ConfigProvider dir="rtl">
+        <div dir="rtl" class="flex min-h-screen flex-col bg-slate-50">
+            <AppHeader />
+            <slot />
+            <AppFooter />
 
-        <AppToaster />
-    </div>
+            <AppToaster />
+        </div>
+    </ConfigProvider>
 </template>

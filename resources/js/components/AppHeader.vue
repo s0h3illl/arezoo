@@ -2,10 +2,10 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
+import AccountMenu from '@/components/AccountMenu.vue';
 import HomeIcon from '@/components/icons/HomeIcon.vue';
-import UserIcon from '@/components/icons/UserIcon.vue';
 import { useHeaderNav } from '@/composables/useHeaderNav';
-import { home, login, profile } from '@/routes';
+import { home, login } from '@/routes';
 
 const page = usePage();
 
@@ -13,6 +13,8 @@ const page = usePage();
 const navItems = useHeaderNav();
 
 const user = computed(() => page.props.auth.user);
+
+const isVerified = computed(() => page.props.auth.isVerified);
 
 /**
  * A page's own links are section anchors, which Inertia's <Link> would try to
@@ -56,14 +58,7 @@ function isAnchor(href: string): boolean {
                 <HomeIcon />
             </Link>
 
-            <Link
-                v-if="user"
-                :href="profile(user.username)"
-                aria-label="حساب کاربری"
-                class="flex size-[38px] items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition-colors hover:border-emerald-200 hover:bg-emerald-50 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
-            >
-                <UserIcon />
-            </Link>
+            <AccountMenu v-if="user" :user="user" :is-verified="isVerified" />
 
             <Link
                 v-else
