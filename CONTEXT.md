@@ -38,7 +38,7 @@ Who can see *who* made a contribution — never how much, and never whether its 
 A message is not narrower: the wish's owner reads every message left on a paid contribution to their wish, at every Visibility, and Visibility governs whose name sits above it rather than whether it is read (ADR-0011). Under `hidden` the message is shown attributed to no one.
 
 **Dashboard**:
-A signed-in user's own section of the app, at `/dashboard` — their account details, the messages left on their wishes, and their withdrawals. Never called a profile: that word belongs to the public page at `/u/{username}`, which is a different thing for a different reader.
+A signed-in user's own section of the app, at `/dashboard` — their account details, the messages left on their wishes, and their money. The money part is named مالی and holds a balance and the withdrawals drawn against it, rather than being named for withdrawals alone: an owner goes there to see what they have earned as often as to ask for it. Never called a profile: that word belongs to the public page at `/u/{username}`, which is a different thing for a different reader.
 _Avoid_: Profile, account area, my page
 
 **Toman**:
@@ -57,8 +57,12 @@ The part of a balance that is real money the owner has earned, but cannot withdr
 _Avoid_: Pending (which means the money isn't real yet — see Contribution)
 
 **Withdrawal**:
-An owner's request to take money out of their balance to their bank account. A withdrawal is either awaiting a decision, paid, or rejected; it costs a fee, taken out of what the owner receives.
-_Avoid_: Payout, settlement, transaction
+An owner's request to take money out of their balance to a bank account they name when they ask. A withdrawal is requested, then accepted, then paid; it may be rejected instead, either before or after it is accepted. Paid and rejected are final. Until it is rejected it holds its money aside, so the same money cannot be asked for twice. It costs a fee, fixed when it is requested and taken out of what the owner receives. Only an admin ends a withdrawal — an owner may ask for one and nothing more.
+_Avoid_: Payout, settlement, transaction, pending (the first state is *requested*; see Held)
+
+**Note**:
+An admin's remark on a withdrawal, read by the owner it belongs to. Optional, never written by anyone but an admin, and free to change at any point in a withdrawal's life — including after it has been paid or rejected. It is the only thing an admin can say to an owner about their money.
+_Avoid_: Message (which is a contributor's words on a contribution), comment, reason
 
 **Raised**:
 The lifetime sum of every contribution whose money has landed, across the whole platform. It only grows: a withdrawal moves money out of one owner's Balance, and does not move this.

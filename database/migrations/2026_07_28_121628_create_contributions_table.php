@@ -19,7 +19,7 @@ return new class extends Migration
         Schema::create('contributions', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Wish::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(User::class, 'contributor_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignIdFor(User::class, 'contributor_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignIdFor(Payment::class)->unique()->constrained()->restrictOnDelete();
             $table->unsignedInteger('amount');
             $table->text('message')->nullable();

@@ -18,11 +18,11 @@ Three pages under `/dashboard`, reached from a new account menu in the site head
 |---|---|---|
 | `/dashboard` | account info — name, username, email, avatar, bio, password | `auth` |
 | `/dashboard/messages` | the messages contributors left | `auth` + `verified` |
-| `/dashboard/withdrawals` | balance, bank details, request form, request history | `auth` + `verified` |
+| `/dashboard/finance` | balance, request form, request history | `auth` + `verified` |
 
 **No `DashboardLayout`.** All three are ordinary `AppLayout` pages — site header, footer, toaster. The admin panel's pattern of its own layout, header and burger was rejected: the admin panel is a separate world for staff, and a user in their dashboard has not left the site.
 
-The only chrome change is the menu itself, plus one `<ConfigProvider dir="rtl">` the menu forces into `AppLayout`. The header's bordered user icon becomes a `reka-ui` dropdown carrying صفحه من / اطلاعات من / پیام‌ها / برداشت‌ها / خروج از حساب — which is also how the app finally gets a sign-out.
+The only chrome change is the menu itself, plus one `<ConfigProvider dir="rtl">` the menu forces into `AppLayout`. The header's bordered user icon becomes a `reka-ui` dropdown carrying صفحه من / اطلاعات من / پیام‌ها / مالی / خروج از حساب — which is also how the app finally gets a sign-out.
 
 Alongside it, saving says so through the mechanism the endpoint already dictates: Fortify's `status`, untouched, for the Fortify endpoints the account screen posts to — and a toast for our own controllers. Every save this map adds is a Fortify one.
 
@@ -43,14 +43,14 @@ Alongside it, saving says so through the mechanism the endpoint already dictates
 11. As an unverified user, I want the menu to tell me my email is unverified and show me the sections I cannot reach yet, so that I learn they exist rather than finding them missing.
 12. As an unverified user, I want to reach my account screen anyway, so that the screen that fixes my address is not behind the verification the address is blocking.
 
-_Stories for `/dashboard/withdrawals` are blocked — see [Open Decisions](#open-decisions)._
+_Stories for `/dashboard/finance` live in `.scratch/balance-and-withdrawals/spec.md`, which was rewritten on 2026-09-04 and owns them outright. This effort owns only where the page hangs and how it is reached._
 
 ## Implementation Decisions
 
 ### The routes
 
 - **Three routes on a root `DashboardController`**, per [The destination and the shape of the dashboard](issues/00-charting.md).
-- **`/dashboard` carries `auth` only — the one exception, and it is load-bearing.** Per [How the profile form is tested](issues/09-how-the-profile-form-is-tested.md), which amended charting and two other tickets. An unverified user must reach the account screen, because that is the screen that corrects a mistyped address. `/dashboard/messages` and `/dashboard/withdrawals` keep `auth` + `verified`.
+- **`/dashboard` carries `auth` only — the one exception, and it is load-bearing.** Per [How the profile form is tested](issues/09-how-the-profile-form-is-tested.md), which amended charting and two other tickets. An unverified user must reach the account screen, because that is the screen that corrects a mistyped address. `/dashboard/messages` and `/dashboard/finance` keep `auth` + `verified`.
 - **This goes further than `.scratch/auth-pages/spec.md`'s stated policy** — "required for the domain's mutating actions… never for browsing" — deliberately, for the two gated pages. That policy is also not implemented (`wishes.store` carries only `auth`); recorded, not this effort's to fix.
 - **A blocked user needs no guard.** `EnsureUserIsNotBlocked` already sits in the Fortify authenticate pipeline, so they never get a session.
 
@@ -101,7 +101,7 @@ _Stories for `/dashboard/withdrawals` are blocked — see [Open Decisions](#open
 
 - **A `reka-ui` `DropdownMenu`, variant B — the identity card.** Per [The account menu in the header](issues/06-the-account-menu-in-the-header.md), prototyped in commit `fce8acc`, now on `main`. Trigger is the user's 38px round avatar (an emerald first-letter circle as fallback), replacing today's bordered `UserIcon`. The 260px panel opens on a name / `@username` block, then the four rows with icons, a separator, then **خروج از حساب**.
 - **Sign-out is `<Link :href="logout()">`, and the spec must name it explicitly.** Wayfinder's `logout()` already carries `method: 'post'`. All three candidates were probed in a real menu: `<Link>` works, `router.post()` works, and **an Inertia `<Form>` does not** — `DropdownMenuItem`'s select closes the menu and unmounts the portal before the form submits. That is the shape a reader would reach for first.
-- **An unverified user sees an amber «ایمیلت هنوز تأیید نشده» strip** between the identity header and the rows. **اطلاعات من is enabled for everyone** (the amendment from [How the profile form is tested](issues/09-how-the-profile-form-is-tested.md), since `/dashboard` dropped `verified`); پیام‌ها and برداشت‌ها render disabled — slate-300, `pointer-events-none`, `DropdownMenuItem :disabled`, so keyboard navigation skips them. Not hidden: a user who cannot see the sections cannot learn they exist.
+- **An unverified user sees an amber «ایمیلت هنوز تأیید نشده» strip** between the identity header and the rows. **اطلاعات من is enabled for everyone** (the amendment from [How the profile form is tested](issues/09-how-the-profile-form-is-tested.md), since `/dashboard` dropped `verified`); پیام‌ها and مالی render disabled — slate-300, `pointer-events-none`, `DropdownMenuItem :disabled`, so keyboard navigation skips them. Not hidden: a user who cannot see the sections cannot learn they exist.
 - **`AppLayout` gains one `<ConfigProvider dir="rtl">`.** `reka-ui` reads direction from the provider, **not** from the DOM `dir` attribute, and defaults to `ltr` — proven by removing it and watching `align="end"` flip the panel to the viewport's left edge, clear of its trigger. It goes in the layout rather than per-menu so the next popper-positioned primitive does not repeat the bug. Invisible until now because every existing `reka-ui` use in the app is side-agnostic.
 - **No burger, and no `md:` breakpoint.** At 375px the dropdown fits beside the logo and the landing page's anchors. `AdminHeader` needs a burger only because it renders six items inline; the dropdown *is* the mobile answer.
 - **`provideHeaderNav()` is unaffected** and keeps meaning the current page's own anchors. The menu carries the sections from anywhere, so a second inline nav would be the same links built twice with an active state to keep in sync.
@@ -171,13 +171,13 @@ Per [How the profile form is tested](issues/09-how-the-profile-form-is-tested.md
 
 ### The accepted risk: no password confirmation anywhere
 
-Nothing in this section asks for a password before a sensitive action. **An open session can change the Sheba and then withdraw to it**, and can move the account's email address without the old address ever being told. This was decided at charting, deliberately, to keep the effort free of a dependency on the unbuilt confirm-password page. It is recorded here as a decision taken with its reason, so that review does not re-litigate it as an oversight.
+Nothing in this section asks for a password before a sensitive action. **An open session can withdraw the account's whole available balance to any Sheba it likes**, and can move the account's email address without the old address ever being told. (This risk was originally recorded as "can change the Sheba and then withdraw to it". There is no stored Sheba any more — it is typed onto each request — so the two-step framing is wrong, and the one-step version is if anything worse.) This was decided at charting, deliberately, to keep the effort free of a dependency on the unbuilt confirm-password page. It is recorded here as a decision taken with its reason, so that review does not re-litigate it as an oversight.
 
 ### Amendments this effort owes other efforts
 
 None of these are optional, and none should be made silently.
 
-- **`.scratch/balance-and-withdrawals/spec.md`** — stories 8–10 (the itemised statement) are cut. Everything else stands. **Blocked**: the precise edit is the answer to [The withdrawals page](issues/07-the-withdrawals-page-against-the-balance-spec.md), which is unresolved, so the edit has **not** been made.
+- **`.scratch/balance-and-withdrawals/spec.md`** — **paid, 2026-09-04.** The statement is cut as this effort required. The amendment turned out to be larger than an edit: that spec was rewritten and its five issues replaced with three, by the grilling recorded in [The withdrawals page](issues/07-the-withdrawals-page-against-the-balance-spec.md). Its page is `/dashboard/finance`, the bank-details form is gone entirely, and a withdrawal now has four states. Nothing is owed there any more.
 - **`.scratch/auth-pages/` — one page, not four.** `auth/VerifyEmail.vue` grows the email-change form. `auth/Login.vue` and `auth/ForgotPassword.vue` are untouched, and all three keep their green `status` panels.
 - **`.scratch/contributions/`** — the contribute form gains `max:512` on `message`, validated before the gateway redirect, and should tell the contributor that the owner reads their message whatever its visibility. Recorded as constraints; neither is built here.
 - **`CONTEXT.md:38` is rewritten, and the reversal needs an ADR** beside ADR-0010. **Made** — the entry is rewritten and [ADR-0011](../../docs/adr/0011-the-owner-reads-every-message.md) records the reversal. A message is no longer narrower than identity: the owner reads every message on a paid contribution to their wish, and Visibility governs whose *name* sits above it, never whether it is read. The ADR's body is the reasoning in [What the inbox shows](issues/04-what-the-inbox-shows.md) — the leak the mask does not close, and why the decision stands anyway.
@@ -194,9 +194,9 @@ None of these are optional, and none should be made silently.
 
 ## Open Decisions
 
-**This spec is `draft`, not `ready-for-agent`, because two decisions are unresolved.** Neither is guessed at here.
+**This spec is `draft`, not `ready-for-agent`, because one decision is unresolved.** It is not guessed at here.
 
-1. **[The withdrawals page against the balance spec](issues/07-the-withdrawals-page-against-the-balance-spec.md)** — open, unclaimed. Decides which of the balance spec's 48 stories the page renders, what replaces the statement's job, how the three figures read, where the bank-details form sits, what the request form does, what the history rows show, and the empty states. **Its answer is also the text of the `balance-and-withdrawals` amendment**, which is why that edit is not made above. Until it lands there are no user stories and no implementation decisions for `/dashboard/withdrawals` — a third of this section.
+1. ~~**[The withdrawals page against the balance spec](issues/07-the-withdrawals-page-against-the-balance-spec.md)**~~ — **resolved 2026-09-04.** The page is `/dashboard/finance`, reached from a مالی menu item, carrying the balance figures, the request history and the request form. Its user stories and implementation decisions live in `.scratch/balance-and-withdrawals/spec.md`, not here.
 2. **[What the unread badge costs on every page](issues/05-what-the-unread-badge-costs.md)** — marked `claimed`, possibly a stale claim. Decides the count's query and indexes, whether it is deferred, where it is shared from, that it is never computed for guests, when `messages_seen_at` is stamped and what that stamp means for a paginated inbox, and what the badge shows past a point. The menu's **dot on the avatar and count on the پیام‌ها row** are already decided; what feeds them is not.
 
 ## Build Tickets
@@ -216,4 +216,6 @@ Seven tickets cover the settled surfaces, numbered on from this map's decision t
 
 Ticket 12 is done. Ticket 16 can start immediately, and 13 is now unblocked.
 
-**Two more tickets are owed and not written**, blocked on the open decisions above: the **unread badge** (its presentation is settled — a dot on the avatar, a count on the row — but not its query, its deferral, or what the stamp means), and the **withdrawals page**, which also carries the `balance-and-withdrawals` amendment and adds the برداشت‌ها row to the menu. Ticket 18 is scoped to exclude both.
+**One more ticket is owed and not written**, blocked on the open decision above: the **unread badge** (its presentation is settled — a dot on the avatar, a count on the row — but not its query, its deferral, or what the stamp means). Ticket 18 is scoped to exclude it.
+
+The finance page is no longer owed here. It is `.scratch/balance-and-withdrawals/issues/01` and `02`, which own the page and the request form; **adding the مالی row to `AccountMenu.vue` belongs to ticket 01 of that effort**, so this section's menu is finished by work filed elsewhere.

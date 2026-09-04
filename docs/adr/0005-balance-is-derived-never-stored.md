@@ -1,6 +1,8 @@
 # A balance is derived, never stored
 
-There is no `balance` column and no ledger table. An owner's balance is computed on read: available is the sum of paid contributions to their wishes that have been held long enough, minus every withdrawal that is awaiting a decision or paid; held is the rest. A withdrawal awaiting a decision counts against the balance exactly as a paid one does, so the same money can never be requested twice; rejecting a withdrawal releases it by the same arithmetic.
+There is no `balance` column and no ledger table. An owner's balance is computed on read: available is the sum of paid contributions to their wishes that have been held long enough, minus every withdrawal that has not been rejected; held is the rest. A withdrawal counts against the balance from the moment it is requested, and goes on counting once it is accepted and once it is paid, so the same money can never be requested twice; rejecting a withdrawal releases it by the same arithmetic.
+
+> **Amended 2026-09-04.** This originally read "minus every withdrawal that is awaiting a decision or paid", written when a withdrawal had three states. A fourth, `Accepted`, sits between requested and paid. Every state but `Rejected` reserves its amount identically, which is why the rule is now stated as an exclusion rather than a list — a fifth state would otherwise silently stop reserving.
 
 This is the same instinct as `Wish::receivedTotal()` — the contributions are the truth, and every figure the app shows is a question asked of them. A derived balance cannot disagree with the contributions that justify it, so there is no reconciliation to write and no drift to detect.
 
