@@ -210,7 +210,7 @@ Seven tickets cover the settled surfaces, numbered on from this map's decision t
 | 13 | [The account screen at `/dashboard`](issues/13-the-account-screen.md) | 12 ✓ |
 | 14 | [An avatar can be set](issues/14-an-avatar-can-be-set.md) | 13 |
 | 15 | [The email change on the verify notice](issues/15-the-email-change-on-the-verify-notice.md) | 13 |
-| 16 | [A message is no longer narrower than identity](issues/16-a-message-is-no-longer-narrower-than-identity.md) — **done** | — |
+| 16 | [A message is no longer narrower than identity](issues/16-a-message-is-no-longer-narrower-than-identity.md) — **done, `5812123`** | — |
 | 17 | [The inbox at `/dashboard/messages`](issues/17-the-inbox.md) | 16 |
 | 18 | [The account menu in the header](issues/18-the-account-menu.md) | 13, 17 |
 

@@ -6,7 +6,7 @@ Documentation only. No code.
 
 **Blocked by:** None — can start immediately.
 
-**Status:** done
+**Status:** done — shipped in `5812123`
 
 Spec: [Amendments this effort owes other efforts](../spec.md). Decision: [What the inbox shows](04-what-the-inbox-shows.md).
 
