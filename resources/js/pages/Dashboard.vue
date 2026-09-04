@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
+import { Form, Head, router } from '@inertiajs/vue3';
+import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
 import { computed } from 'vue';
 
+import FileField from '@/components/FileField.vue';
 import SubmitButton from '@/components/SubmitButton.vue';
 import TextAreaField from '@/components/TextAreaField.vue';
 import TextField from '@/components/TextField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { destroy as destroyAvatar } from '@/routes/profile/avatar';
 import { update as updatePassword } from '@/routes/user-password';
 import { update as updateAccount } from '@/routes/user-profile-information';
 import type { Account } from '@/types';
@@ -23,31 +26,12 @@ const accountSaved = computed(
 
 const passwordSaved = computed(() => props.status === 'password-updated');
 
-const accountForm = useForm({
-    name: props.user.name,
-    username: props.user.username,
-    email: props.user.email,
-    bio: props.user.bio ?? '',
-});
+const initial = computed(() => [...props.user.name][0] ?? '');
 
-function saveAccount(): void {
-    accountForm.put(updateAccount.url(), {
-        errorBag: 'updateProfileInformation',
+function removeAvatar(): void {
+    router.delete(destroyAvatar.url(), {
         preserveScroll: true,
-    });
-}
-
-const passwordForm = useForm({
-    current_password: '',
-    password: '',
-    password_confirmation: '',
-});
-
-function changePassword(): void {
-    passwordForm.put(updatePassword.url(), {
-        errorBag: 'updatePassword',
-        preserveScroll: true,
-        onSuccess: () => passwordForm.reset(),
+        preserveState: true,
     });
 }
 </script>
@@ -77,64 +61,125 @@ function changePassword(): void {
                     اطلاعاتت ذخیره شد.
                 </p>
 
-                <form
+                <Form
+                    #default="{ errors, processing }"
                     novalidate
+                    :action="updateAccount.url()"
+                    method="post"
+                    error-bag="updateProfileInformation"
+                    :options="{ preserveScroll: true }"
                     class="mt-4 flex flex-col gap-4"
-                    @submit.prevent="saveAccount"
                 >
+                    <input type="hidden" name="_method" value="put" />
+
+                    <div class="flex items-center gap-4">
+                        <AvatarRoot
+                            class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-emerald-50"
+                        >
+                            <AvatarImage
+                                v-if="user.avatar"
+                                :src="user.avatar"
+                                alt=""
+                                class="size-full rounded-full border-1 border-gray-100 object-cover shadow"
+                            />
+                            <AvatarFallback
+                                class="text-2xl font-black text-emerald-600"
+                            >
+                                {{ initial }}
+                            </AvatarFallback>
+                        </AvatarRoot>
+
+                        <p
+                            v-if="!user.avatar"
+                            data-test="no-avatar"
+                            class="text-xs font-bold text-slate-400"
+                        >
+                            هنوز عکسی انتخاب نکردی.
+                        </p>
+
+                        <button
+                            v-if="user.avatar"
+                            type="button"
+                            data-test="remove-avatar"
+                            class="rounded-lg px-2 py-1.5 text-xs font-bold text-slate-400 transition-colors hover:bg-rose-50 hover:text-rose-600"
+                            @click="removeAvatar"
+                        >
+                            حذف عکس
+                        </button>
+                    </div>
+
+                    <FileField
+                        id="avatar"
+                        name="avatar"
+                        label="عکس من"
+                        accept="image/*"
+                        :hint="
+                            user.avatar
+                                ? 'اگر عکسی انتخاب کنی، جای عکس فعلی می‌شینه. حداکثر ۵۱۲ کیلوبایت.'
+                                : 'اختیاری. حداکثر ۵۱۲ کیلوبایت.'
+                        "
+                        :error="errors.avatar"
+                    />
+
                     <TextField
                         id="name"
-                        v-model="accountForm.name"
+                        :model-value="user.name"
+                        name="name"
                         label="نام"
                         type="text"
                         placeholder="اسمت رو بنویس"
                         autocomplete="name"
-                        :error="accountForm.errors.name"
+                        :error="errors.name"
                     />
 
                     <TextField
                         id="username"
-                        v-model="accountForm.username"
+                        :model-value="user.username"
+                        name="username"
                         label="نام کاربری"
                         type="text"
                         dir="ltr"
                         placeholder="sara-ahmadi"
                         autocomplete="nickname"
-                        :error="accountForm.errors.username"
+                        :error="errors.username"
                     />
 
                     <TextField
                         id="email"
-                        v-model="accountForm.email"
+                        :model-value="user.email"
+                        name="email"
                         label="ایمیل"
                         type="email"
                         dir="ltr"
                         placeholder="you@example.com"
                         autocomplete="email"
-                        :error="accountForm.errors.email"
+                        :error="errors.email"
                     />
 
                     <TextAreaField
                         id="bio"
-                        v-model="accountForm.bio"
+                        :model-value="user.bio ?? ''"
+                        name="bio"
                         label="درباره‌ی من"
                         placeholder="یک جمله درباره‌ی خودت بنویس"
-                        :error="accountForm.errors.bio"
+                        :error="errors.bio"
                     />
 
                     <SubmitButton
                         data-test="save-account"
-                        :processing="accountForm.processing"
+                        :processing="processing"
                     >
                         ذخیره
                     </SubmitButton>
-                </form>
+                </Form>
             </section>
 
             <section
                 class="mt-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_12px_32px_-16px_rgb(15_23_42/0.12)]"
             >
-                <h2 class="text-lg font-black text-slate-900">تغییر رمز عبور</h2>
+                <h2 class="text-lg font-black text-slate-900">
+                    تغییر رمز عبور
+                </h2>
                 <p class="mt-1 text-sm text-slate-500">
                     برای عوض کردن رمز، اول رمز فعلی‌ت رو بزن.
                 </p>
@@ -147,34 +192,39 @@ function changePassword(): void {
                     رمز عبورت عوض شد.
                 </p>
 
-                <form
+                <Form
+                    #default="{ errors, processing }"
                     novalidate
+                    :action="updatePassword.url()"
+                    method="put"
+                    error-bag="updatePassword"
+                    :options="{ preserveScroll: true }"
                     class="mt-4 flex flex-col gap-4"
-                    @submit.prevent="changePassword"
+                    reset-on-success
                 >
                     <TextField
                         id="current_password"
-                        v-model="passwordForm.current_password"
+                        name="current_password"
                         label="رمز عبور فعلی"
                         type="password"
                         dir="ltr"
                         autocomplete="current-password"
-                        :error="passwordForm.errors.current_password"
+                        :error="errors.current_password"
                     />
 
                     <TextField
                         id="password"
-                        v-model="passwordForm.password"
+                        name="password"
                         label="رمز عبور جدید"
                         type="password"
                         dir="ltr"
                         autocomplete="new-password"
-                        :error="passwordForm.errors.password"
+                        :error="errors.password"
                     />
 
                     <TextField
                         id="password_confirmation"
-                        v-model="passwordForm.password_confirmation"
+                        name="password_confirmation"
                         label="تکرار رمز عبور جدید"
                         type="password"
                         dir="ltr"
@@ -183,11 +233,11 @@ function changePassword(): void {
 
                     <SubmitButton
                         data-test="change-password"
-                        :processing="passwordForm.processing"
+                        :processing="processing"
                     >
                         تغییر رمز عبور
                     </SubmitButton>
-                </form>
+                </Form>
             </section>
         </div>
     </main>

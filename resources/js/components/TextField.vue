@@ -13,7 +13,7 @@ defineProps<{
     error?: string;
 }>();
 
-const model = defineModel<string>({ required: true });
+const model = defineModel<string>({ default: '' });
 
 const input = useTemplateRef<HTMLInputElement>('input');
 

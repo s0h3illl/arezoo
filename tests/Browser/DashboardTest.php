@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 
 test('the dashboard renders without javascript errors', function () {
     $this->actingAs(User::factory()->create(['email' => 'sara@example.com']));
@@ -9,6 +10,7 @@ test('the dashboard renders without javascript errors', function () {
 
     $page->assertNoJavaScriptErrors()
         ->assertSee('اطلاعات من')
+        ->assertSee('عکس من')
         ->assertSee('تغییر رمز عبور');
 });
 
@@ -62,6 +64,42 @@ test('the dashboard shows the error when a username somebody else holds is saved
         ->assertSee('این نام کاربری قبلاً ثبت شده است.');
 
     expect($sara->fresh()->username)->toBe('sara');
+});
+
+test('the dashboard says so when there is no avatar', function () {
+    signInAsSara();
+
+    visit(route('dashboard', absolute: false))->assertPresent('@no-avatar');
+});
+
+test('the dashboard drops an avatar the user asks it to remove', function () {
+    Storage::fake('public');
+    Storage::disk('public')->put('avatars/old.jpg', 'not really a picture');
+
+    $sara = signInAsSara();
+    $sara->forceFill(['avatar' => 'avatars/old.jpg'])->save();
+
+    visit(route('dashboard', absolute: false))
+        ->click('@remove-avatar')
+        ->assertMissing('@remove-avatar')
+        ->assertPresent('@no-avatar');
+
+    expect($sara->fresh()->avatar)->toBeNull();
+    Storage::disk('public')->assertMissing('avatars/old.jpg');
+});
+
+test('dropping the avatar keeps the edits the user has not saved yet', function () {
+    Storage::fake('public');
+    Storage::disk('public')->put('avatars/old.jpg', 'not really a picture');
+
+    $sara = signInAsSara();
+    $sara->forceFill(['avatar' => 'avatars/old.jpg'])->save();
+
+    visit(route('dashboard', absolute: false))
+        ->fill('bio', 'about me')
+        ->click('@remove-avatar')
+        ->assertMissing('@remove-avatar')
+        ->assertValue('bio', 'about me');
 });
 
 function signInAsSara(): User

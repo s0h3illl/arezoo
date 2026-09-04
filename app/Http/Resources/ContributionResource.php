@@ -33,7 +33,7 @@ class ContributionResource extends JsonResource
              */
             'contributor' => [
                 'name' => $visible ? $this->contributor->name : $this->maskedName(),
-                'avatar' => $visible ? $this->contributor->avatar : null,
+                'avatar' => $visible ? $this->contributor->avatarUrl() : null,
             ],
             'amount' => $this->amount,
             'settled_at' => $this->settled_at?->diffForHumans(),

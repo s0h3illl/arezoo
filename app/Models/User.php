@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -60,6 +61,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function wishes(): HasMany
     {
         return $this->hasMany(Wish::class);
+    }
+
+    public function avatarUrl(): ?string
+    {
+        return $this->avatar === null
+            ? null
+            : Storage::disk('public')->url($this->avatar);
     }
 
     /**

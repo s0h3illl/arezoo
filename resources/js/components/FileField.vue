@@ -15,7 +15,7 @@ defineProps<{
     error?: string;
 }>();
 
-const model = defineModel<File | null>({ required: true });
+const model = defineModel<File | null>({ default: null });
 
 /** Dismissing the picker without choosing anything clears the field. */
 function choose(event: Event): void {

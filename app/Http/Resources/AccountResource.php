@@ -26,7 +26,7 @@ class AccountResource extends JsonResource
             'name' => $this->name,
             'username' => $this->username,
             'email' => $this->email,
-            'avatar' => $this->avatar,
+            'avatar' => $this->avatarUrl(),
             'bio' => $this->bio,
         ];
     }
