@@ -180,12 +180,12 @@ None of these are optional, and none should be made silently.
 - **`.scratch/balance-and-withdrawals/spec.md`** — stories 8–10 (the itemised statement) are cut. Everything else stands. **Blocked**: the precise edit is the answer to [The withdrawals page](issues/07-the-withdrawals-page-against-the-balance-spec.md), which is unresolved, so the edit has **not** been made.
 - **`.scratch/auth-pages/` — one page, not four.** `auth/VerifyEmail.vue` grows the email-change form. `auth/Login.vue` and `auth/ForgotPassword.vue` are untouched, and all three keep their green `status` panels.
 - **`.scratch/contributions/`** — the contribute form gains `max:512` on `message`, validated before the gateway redirect, and should tell the contributor that the owner reads their message whatever its visibility. Recorded as constraints; neither is built here.
-- **`CONTEXT.md:38` is rewritten, and the reversal needs an ADR** beside ADR-0010. A message is no longer narrower than identity: the owner reads every message on a paid contribution to their wish, and Visibility governs whose *name* sits above it, never whether it is read. The ADR's body is the reasoning in [What the inbox shows](issues/04-what-the-inbox-shows.md) — the leak the mask does not close, and why the decision stands anyway.
+- **`CONTEXT.md:38` is rewritten, and the reversal needs an ADR** beside ADR-0010. **Made** — the entry is rewritten and [ADR-0011](../../docs/adr/0011-the-owner-reads-every-message.md) records the reversal. A message is no longer narrower than identity: the owner reads every message on a paid contribution to their wish, and Visibility governs whose *name* sits above it, never whether it is read. The ADR's body is the reasoning in [What the inbox shows](issues/04-what-the-inbox-shows.md) — the leak the mask does not close, and why the decision stands anyway.
 
 ### Glossary entries this effort owes `CONTEXT.md`
 
-- **«Dashboard»** is a new term and `CONTEXT.md` does not have it. It needs an entry, with `_Avoid_: Profile` — the public page owns that word.
-- **Visibility's entry needs amending** now that the inbox is a second reader of the message rule (see above).
+- **«Dashboard»** is a new term and `CONTEXT.md` did not have it. **Added**, with `_Avoid_: Profile` — the public page owns that word.
+- **Visibility's entry needs amending** now that the inbox is a second reader of the message rule. **Amended** (see above).
 - **`messages_seen_at`** — whether it introduces a glossary term of its own is **blocked** on [What the unread badge costs](issues/05-what-the-unread-badge-costs.md), which decides what the stamp actually means.
 
 ### Dependencies this effort does not own
@@ -210,7 +210,7 @@ Seven tickets cover the settled surfaces, numbered on from this map's decision t
 | 13 | [The account screen at `/dashboard`](issues/13-the-account-screen.md) | 12 ✓ |
 | 14 | [An avatar can be set](issues/14-an-avatar-can-be-set.md) | 13 |
 | 15 | [The email change on the verify notice](issues/15-the-email-change-on-the-verify-notice.md) | 13 |
-| 16 | [A message is no longer narrower than identity](issues/16-a-message-is-no-longer-narrower-than-identity.md) | — |
+| 16 | [A message is no longer narrower than identity](issues/16-a-message-is-no-longer-narrower-than-identity.md) — **done** | — |
 | 17 | [The inbox at `/dashboard/messages`](issues/17-the-inbox.md) | 16 |
 | 18 | [The account menu in the header](issues/18-the-account-menu.md) | 13, 17 |
 

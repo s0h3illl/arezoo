@@ -35,7 +35,11 @@ _Avoid_: Guest (which means signed out, whosever profile they are reading)
 
 **Visibility**:
 Who can see *who* made a contribution — never how much, and never whether its money counts (ADR-0010). `public`: everyone. `owner`: only the wish's owner. `hidden`: no one, not even the owner. A contribution's amount is always shown, attributed to no one when its contributor is hidden.
-A message is narrower still: only ever the wish's owner reads one, and only while the contributor is visible to them — under `hidden` it stays unread too, since a message can name the person the setting exists to conceal.
+A message is not narrower: the wish's owner reads every message left on a paid contribution to their wish, at every Visibility, and Visibility governs whose name sits above it rather than whether it is read (ADR-0011). Under `hidden` the message is shown attributed to no one.
+
+**Dashboard**:
+A signed-in user's own section of the app, at `/dashboard` — their account details, the messages left on their wishes, and their withdrawals. Never called a profile: that word belongs to the public page at `/u/{username}`, which is a different thing for a different reader.
+_Avoid_: Profile, account area, my page
 
 **Toman**:
 The unit of every money value in the app. Rial appears only at the payment-gateway boundary.
