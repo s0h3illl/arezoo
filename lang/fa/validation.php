@@ -199,6 +199,7 @@ return [
     */
 
     'attributes' => [
+        'bio' => 'درباره‌ی من',
         'current_password' => 'رمز عبور فعلی',
         'description' => 'توضیح',
         'email' => 'ایمیل',

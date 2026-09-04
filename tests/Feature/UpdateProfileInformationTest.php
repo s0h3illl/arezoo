@@ -67,8 +67,27 @@ test('an unverified user may still save their account details', function () {
     expect($sara->fresh()->username)->toBe('sara-ahmadi');
 });
 
+test('a form that leaves the bio out does not wipe it', function () {
+    $sara = User::factory()->create(['username' => 'sara', 'bio' => 'about me']);
+
+    $this->actingAs($sara)
+        ->put(route('user-profile-information.update'), account(['username' => 'sara']))
+        ->assertSessionHasNoErrors();
+
+    expect($sara->fresh()->bio)->toBe('about me');
+});
+
+test('an empty bio clears the one on the row', function () {
+    $sara = User::factory()->create(['username' => 'sara', 'bio' => 'about me']);
+
+    $this->actingAs($sara)
+        ->put(route('user-profile-information.update'), account(['username' => 'sara', 'bio' => '']))
+        ->assertSessionHasNoErrors();
+
+    expect($sara->fresh()->bio)->toBeNull();
+});
+
 /**
- *
  * @param  array<string, string>  $overrides
  * @return array<string, string>
  */

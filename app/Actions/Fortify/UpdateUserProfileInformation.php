@@ -13,10 +13,12 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
 {
     use UsernameValidationRules;
 
+    private const int MAX_BIO_CHARACTERS = 500;
+
     /**
      * Validate and update the given user's profile information.
      *
-     * @param  array<string, string>  $input
+     * @param  array<string, ?string>  $input
      *
      * @throws ValidationException
      */
@@ -34,6 +36,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
+
+            'bio' => ['nullable', 'string', 'max:'.self::MAX_BIO_CHARACTERS],
         ])->validateWithBag('updateProfileInformation');
 
         if ($input['email'] !== $user->email &&
@@ -44,6 +48,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'name' => $input['name'],
                 'username' => $input['username'],
                 'email' => $input['email'],
+                'bio' => array_key_exists('bio', $input) ? $input['bio'] : $user->bio,
             ])->save();
         }
     }
@@ -51,7 +56,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
     /**
      * Update the given verified user's profile information.
      *
-     * @param  array<string, string>  $input
+     * @param  array<string, ?string>  $input
      */
     protected function updateVerifiedUser(User $user, array $input): void
     {
@@ -59,6 +64,7 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'name' => $input['name'],
             'username' => $input['username'],
             'email' => $input['email'],
+            'bio' => array_key_exists('bio', $input) ? $input['bio'] : $user->bio,
             'email_verified_at' => null,
         ])->save();
 

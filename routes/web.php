@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TermsController;
@@ -8,6 +9,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
 Route::get('terms', TermsController::class)->name('terms');
+
+Route::get('dashboard', DashboardController::class)
+    ->middleware('auth')
+    ->name('dashboard');
 
 Route::get('u/{username:username}', ProfileController::class)->name('profile');
 
