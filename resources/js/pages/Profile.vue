@@ -32,9 +32,7 @@ const page = usePage();
  * disagree. Nothing is protected by this: adding, editing and deleting are all
  * authorised server-side, and this only decides what is worth drawing.
  */
-const isOwner = computed(
-    () => page.props.auth.user?.id === props.user.id,
-);
+const isOwner = computed(() => page.props.auth.user?.id === props.user.id);
 
 /**
  * The letter that stands in for a picture nobody has uploaded yet.

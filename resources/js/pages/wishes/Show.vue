@@ -149,7 +149,7 @@ const purchaseHost = computed(() => {
                         >
                             <LinkIcon />
                         </div>
-                        <div class="flex items-center justify-between w-full">
+                        <div class="flex w-full items-center justify-between">
                             <span
                                 class="text-[13.5px] font-extrabold text-slate-900"
                             >

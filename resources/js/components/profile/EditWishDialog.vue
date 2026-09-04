@@ -217,7 +217,10 @@ function focusTitle(event: Event): void {
                         :error="form.errors.thumbnail"
                     />
 
-                    <SubmitButton data-test="save" :processing="form.processing">
+                    <SubmitButton
+                        data-test="save"
+                        :processing="form.processing"
+                    >
                         ذخیره کن
                     </SubmitButton>
                 </form>
