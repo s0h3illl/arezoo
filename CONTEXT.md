@@ -12,7 +12,7 @@ Money a contributor has put towards a wish. Exists only while the money is real 
 _Avoid_: Donation, pledge, gift
 
 **Contributor**:
-The user who made a contribution.
+The user who made a contribution. Never a unit of counting: every "how many" the app shows counts contributions, so someone who gives twice is two (ADR-0014). The label is «مشارکت», never «نفر».
 _Avoid_: Donor, backer
 
 **Payment**:

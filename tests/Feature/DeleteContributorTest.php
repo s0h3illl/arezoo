@@ -20,15 +20,15 @@ test('an owners money is untouched when one of their contributors deletes their 
     ]);
 
     expect($wish->receivedTotal())->toBe(200_000)
-        ->and($wish->contributorCount())->toBe(2);
+        ->and($wish->contributionCount())->toBe(2);
 
     $reza->delete();
 
     expect($wish->receivedTotal())->toBe(200_000)
-        ->and($wish->contributorCount())->toBe(2);
+        ->and($wish->contributionCount())->toBe(2);
 });
 
-test('a departed contributor who gave twice can no longer be told from two of them', function () {
+test('a contributor who gave twice reads as two contributions, before and after they leave', function () {
     $sara = User::factory()->create();
     $wish = Wish::factory()->create(['user_id' => $sara->id]);
 
@@ -39,12 +39,20 @@ test('a departed contributor who gave twice can no longer be told from two of th
         'amount' => 50_000,
     ]);
 
-    expect($wish->contributorCount())->toBe(1);
+    expect($wish->contributionCount())->toBe(2);
 
     $reza->delete();
 
-    expect($wish->contributorCount())->toBe(2)
+    expect($wish->contributionCount())->toBe(2)
         ->and($wish->receivedTotal())->toBe(100_000);
+});
+
+test('an unpaid contribution is not counted', function () {
+    $wish = Wish::factory()->create();
+    Contribution::factory()->paid()->create(['wish_id' => $wish->id]);
+    Contribution::factory()->pending()->create(['wish_id' => $wish->id]);
+
+    expect($wish->contributionCount())->toBe(1);
 });
 
 test('deleting a contributor leaves every contribution they made in place, with no contributor', function () {

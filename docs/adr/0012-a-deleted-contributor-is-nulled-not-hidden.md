@@ -20,4 +20,5 @@ It also overrides ADR-0010 in one case. Visibility hides identity, and a contrib
 - `contributions.contributor_id` must be nullable, and every read of a contribution's contributor must handle its absence. `ContributionResource` and `MessageResource` mask an unseen contributor today; they now have a second reason a name can be missing, and it is not the same reason.
 - "Deleted" and «ناشناس» are different words with different meanings, and the admin screens are where the difference is load-bearing: an admin sees through Visibility, so «ناشناس» should never appear there and "deleted" is unambiguous when it does.
 - A contribution can outlive every party to it: a soft-deleted wish and a nulled contributor, still crediting a live owner's balance.
+- Nothing may count distinct contributors, because nulling makes that count shrink or split. Counts are of contribution rows instead — see ADR-0014, which this decision forced.
 - Identity is unrecoverable after the fact. If an investigation ever needs to know who a departed contributor was, that information does not exist anywhere in the database, and no migration can bring it back.

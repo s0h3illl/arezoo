@@ -110,17 +110,15 @@ class Wish extends Model
     }
 
     /**
-     * How many people have paid towards this wish.
+     * How many contributions this wish has been paid.
      *
-     * Someone who gives more than once still counts as one contributor, unless
-     * they have deleted their account: nulled contributors cannot be told apart,
-     * so each of their contributions counts on its own.
+     * Rows, not people: someone who gives twice counts twice, and nobody's
+     * departure can move the figure. Counting people needed `contributor_id`,
+     * which a deleted account nulls, so the count shrank or split depending on
+     * how the nulls were handled — see ADR-0012.
      */
-    public function contributorCount(): int
+    public function contributionCount(): int
     {
-        $named = $this->paidContributions()->whereNotNull('contributor_id')->distinct()->count('contributor_id');
-        $departed = $this->paidContributions()->whereNull('contributor_id')->count();
-
-        return $named + $departed;
+        return $this->paidContributions()->count();
     }
 }
