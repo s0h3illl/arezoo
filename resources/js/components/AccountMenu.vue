@@ -17,8 +17,9 @@ import { computed } from 'vue';
 import HomeIcon from '@/components/icons/HomeIcon.vue';
 import MailIcon from '@/components/icons/MailIcon.vue';
 import UserIcon from '@/components/icons/UserIcon.vue';
+import WalletIcon from '@/components/icons/WalletIcon.vue';
 import { dashboard, logout, profile } from '@/routes';
-import { messages } from '@/routes/dashboard';
+import { finance, messages } from '@/routes/dashboard';
 import type { User } from '@/types';
 
 const props = defineProps<{ user: User; isVerified: boolean }>();
@@ -53,6 +54,13 @@ const rows = computed<AccountMenuRow[]>(() => [
         href: messages().url,
         icon: MailIcon,
         test: 'account-menu-messages',
+        needsVerification: true,
+    },
+    {
+        label: 'مالی',
+        href: finance().url,
+        icon: WalletIcon,
+        test: 'account-menu-finance',
         needsVerification: true,
     },
 ]);

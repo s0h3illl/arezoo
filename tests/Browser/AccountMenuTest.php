@@ -21,26 +21,17 @@ test('users can log out from menu', function () {
     visit(route('dashboard', absolute: false))->assertPathIs('/login');
 });
 
-test('users can go to profile page from account menu', function () {
+test('every row in the account menu goes where it says', function (string $row, string $path) {
     visit(route('home', absolute: false))
         ->click('@account-menu')
-        ->click('@profile')
-        ->assertPathIs('/u/mina');
-});
-
-test('users can go to dashboard from the account menu', function () {
-    visit(route('home', absolute: false))
-        ->click('@account-menu')
-        ->click('@account-menu-account')
-        ->assertPathIs('/dashboard');
-});
-
-test('the account menu reaches the inbox', function () {
-    visit(route('home', absolute: false))
-        ->click('@account-menu')
-        ->click('@account-menu-messages')
-        ->assertPathIs('/dashboard/messages');
-});
+        ->click($row)
+        ->assertPathIs($path);
+})->with([
+    'my page' => ['@profile', '/u/mina'],
+    'my details' => ['@account-menu-account', '/dashboard'],
+    'messages' => ['@account-menu-messages', '/dashboard/messages'],
+    'finance' => ['@account-menu-finance', '/dashboard/finance'],
+]);
 
 it('shows teh user info', function () {
     visit(route('home', absolute: false))
@@ -50,24 +41,37 @@ it('shows teh user info', function () {
         ->assertNoJavaScriptErrors();
 });
 
-test('the account menu tells an unverified user why the inbox is shut', function () {
+test('the account menu tells an unverified user why some of it is shut', function () {
     $this->mina->forceFill(['email_verified_at' => null])->save();
 
     visit(route('home', absolute: false))
         ->click('@account-menu')
-        ->assertSee('ایمیلت هنوز تأیید نشده')
-        ->assertAriaAttribute('@account-menu-messages', 'disabled', 'true')
-        ->assertAttributeMissing('@account-menu-account', 'aria-disabled');
+        ->assertSee('ایمیلت هنوز تأیید نشده');
 });
 
-test('an unverified user still reaches the account screen from the menu', function () {
+test('a row behind email verification is shut to an unverified user', function (string $row) {
     $this->mina->forceFill(['email_verified_at' => null])->save();
 
     visit(route('home', absolute: false))
         ->click('@account-menu')
-        ->click('@account-menu-account')
-        ->assertPathIs('/dashboard');
-});
+        ->assertAriaAttribute($row, 'disabled', 'true');
+})->with([
+    'messages' => '@account-menu-messages',
+    'finance' => '@account-menu-finance',
+]);
+
+test('a row that needs no verification stays open to an unverified user', function (string $row, string $path) {
+    $this->mina->forceFill(['email_verified_at' => null])->save();
+
+    visit(route('home', absolute: false))
+        ->click('@account-menu')
+        ->assertAttributeMissing($row, 'aria-disabled')
+        ->click($row)
+        ->assertPathIs($path);
+})->with([
+    'my page' => ['@profile', '/u/mina'],
+    'my details' => ['@account-menu-account', '/dashboard'],
+]);
 
 test('menu is not shown for a guest', function () {
     $this->app['auth']->guard()->logout();

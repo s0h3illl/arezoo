@@ -1,5 +1,6 @@
 export * from './account';
 export * from './auth';
+export * from './balance';
 export * from './contribution';
 export * from './dashboard';
 export * from './faq';

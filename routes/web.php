@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\ProfileAvatarController;
@@ -19,6 +20,10 @@ Route::get('dashboard', DashboardController::class)
 Route::get('dashboard/messages', InboxController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard.messages');
+
+Route::get('dashboard/finance', FinanceController::class)
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.finance');
 
 Route::delete('profile/avatar', [ProfileAvatarController::class, 'destroy'])
     ->middleware('auth')
