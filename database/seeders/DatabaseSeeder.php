@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             ContributionSeeder::class,
             PaymentSeeder::class,
             FaqSeeder::class,
+            WithdrawalSeeder::class,
         ]);
     }
 }
