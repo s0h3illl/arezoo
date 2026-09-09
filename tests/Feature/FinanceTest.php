@@ -4,6 +4,7 @@ use App\Enums\ContributionVisibility;
 use App\Models\Contribution;
 use App\Models\User;
 use App\Models\Wish;
+use App\Models\Withdrawal;
 use Inertia\Testing\AssertableInertia;
 
 test('a guest is sent from the finance page to sign in', function () {
@@ -159,6 +160,50 @@ test('the hold period is read from configuration rather than written into the co
         fn (AssertableInertia $page) => $page
             ->where('balance.available', 60_000)
             ->where('balance.held', 0)
+            ->etc()
+    );
+});
+
+test('every withdrawal the owner has made is listed', function () {
+    $sara = User::factory()->create();
+
+    Withdrawal::factory()->paid()->create([
+        'user_id' => $sara->id,
+        'amount' => 100_000,
+        'requested_at' => now()->subWeek(),
+    ]);
+    $newest = Withdrawal::factory()->rejected()->create([
+        'user_id' => $sara->id,
+        'amount' => 250_000,
+        'requested_at' => now()->subDay(),
+    ]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->has('withdrawals', 2)
+            ->where('withdrawals.0.id', $newest->id)
+            ->where('withdrawals.1.amount', 100_000)
+            ->etc()
+    );
+});
+
+test('each withdrawal row shows the amount, fee, sheba, state and date it was requested', function () {
+    $sara = User::factory()->create();
+
+    Withdrawal::factory()->create([
+        'user_id' => $sara->id,
+        'amount' => 180_000,
+        'fee' => 12_500,
+        'sheba' => 'IR820540102680020817909002',
+    ]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('withdrawals.0.amount', 180_000)
+            ->where('withdrawals.0.fee', 12_500)
+            ->where('withdrawals.0.sheba', 'IR820540102680020817909002')
+            ->where('withdrawals.0.status', 'requested')
+            ->has('withdrawals.0.requested_at')
             ->etc()
     );
 });

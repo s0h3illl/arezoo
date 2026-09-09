@@ -33,6 +33,7 @@ use Illuminate\Support\Str;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Wish> $wishes
+ * @property-read Collection<int, Withdrawal> $withdrawals
  */
 #[Fillable(['name', 'username', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -61,6 +62,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function wishes(): HasMany
     {
         return $this->hasMany(Wish::class);
+    }
+
+    /**
+     * @return HasMany<Withdrawal, $this>
+     */
+    public function withdrawals(): HasMany
+    {
+        return $this->hasMany(Withdrawal::class);
     }
 
     public function avatarUrl(): ?string

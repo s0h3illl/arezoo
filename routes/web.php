@@ -8,6 +8,7 @@ use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TermsController;
 use App\Http\Controllers\WishController;
+use App\Http\Controllers\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class)->name('home');
@@ -24,6 +25,10 @@ Route::get('dashboard/messages', InboxController::class)
 Route::get('dashboard/finance', FinanceController::class)
     ->middleware(['auth', 'verified'])
     ->name('dashboard.finance');
+
+Route::post('dashboard/withdrawals', [WithdrawalController::class, 'store'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard.withdrawals.store');
 
 Route::delete('profile/avatar', [ProfileAvatarController::class, 'destroy'])
     ->middleware('auth')

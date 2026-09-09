@@ -11,3 +11,4 @@ export * from './payment';
 export * from './toast';
 export * from './user';
 export * from './wish';
+export * from './withdrawal';

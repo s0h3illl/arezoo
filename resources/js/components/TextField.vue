@@ -8,6 +8,7 @@ defineProps<{
     label: string;
     type?: string;
     dir?: string;
+    max?: number;
     placeholder?: string;
     autocomplete?: string;
     error?: string;
@@ -46,6 +47,7 @@ defineExpose({ focus });
             class="field-input"
             :name="name"
             :type="type ?? 'text'"
+            :max="max"
             :dir="dir"
             :placeholder="placeholder"
             :autocomplete="autocomplete"

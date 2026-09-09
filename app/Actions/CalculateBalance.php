@@ -16,7 +16,7 @@ class CalculateBalance
         return new Balance(
             available: (int) self::earnings($user)
                 ->where('contributions.settled_at', '<', $boundary)
-                ->sum('contributions.amount'),
+                ->sum('contributions.amount') - self::reserved($user),
             held: (int) self::earnings($user)
                 ->where('contributions.settled_at', '>=', $boundary)
                 ->sum('contributions.amount'),
@@ -32,6 +32,11 @@ class CalculateBalance
             ->join('wishes', 'wishes.id', '=', 'contributions.wish_id')
             ->where('wishes.user_id', $user->id)
             ->paid();
+    }
+
+    private static function reserved(User $user): int
+    {
+        return (int) $user->withdrawals()->reserving()->sum('amount');
     }
 
     private static function holdHours(): int

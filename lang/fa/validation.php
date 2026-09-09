@@ -152,6 +152,7 @@ return [
     'required_without' => 'وقتی :values موجود نیست، وارد کردن :attribute الزامی است.',
     'required_without_all' => 'وقتی هیچ‌کدام از :values موجود نیستند، وارد کردن :attribute الزامی است.',
     'same' => ':attribute باید با :other یکی باشد.',
+    'sheba' => 'شماره شبا معتبر نیست؛ دوباره از روی کارت یا اپلیکیشن بانکت بررسی‌ش کن.',
     'size' => [
         'array' => ':attribute باید :size مورد داشته باشد.',
         'file' => 'حجم :attribute باید :size کیلوبایت باشد.',
@@ -199,6 +200,7 @@ return [
     */
 
     'attributes' => [
+        'amount' => 'مبلغ',
         'bio' => 'درباره‌ی من',
         'current_password' => 'رمز عبور فعلی',
         'description' => 'توضیح',
@@ -208,6 +210,7 @@ return [
         'password_confirmation' => 'تکرار رمز عبور',
         'price' => 'قیمت',
         'purchase_link' => 'لینک محصول',
+        'sheba' => 'شماره شبا',
         'thumbnail' => 'تصویر',
         'title' => 'عنوان',
         'token' => 'کد بازیابی',
