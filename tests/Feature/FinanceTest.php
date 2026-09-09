@@ -207,3 +207,18 @@ test('each withdrawal row shows the amount, fee, sheba, state and date it was re
             ->etc()
     );
 });
+
+test('the owner sees the state and the decision date once an admin has decided a request', function () {
+    $sara = User::factory()->create();
+    $withdrawal = Withdrawal::factory()->accepted()->create([
+        'user_id' => $sara->id,
+        'decided_at' => now()->subHour(),
+    ]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('withdrawals.0.status', 'accepted')
+            ->whereNot('withdrawals.0.decided_at', null)
+            ->etc()
+    );
+});

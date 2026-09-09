@@ -58,6 +58,26 @@ class Withdrawal extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function accept(): void
+    {
+        abort_unless($this->status === WithdrawalStatus::Requested, 403);
+
+        $this->update([
+            'status' => WithdrawalStatus::Accepted,
+            'decided_at' => now(),
+        ]);
+    }
+
+    public function markPaid(): void
+    {
+        abort_unless($this->status === WithdrawalStatus::Accepted, 403);
+
+        $this->update([
+            'status' => WithdrawalStatus::Paid,
+            'decided_at' => now(),
+        ]);
+    }
+
     /**
      * @param  Builder<$this>  $query
      */

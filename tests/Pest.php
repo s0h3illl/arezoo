@@ -1,6 +1,10 @@
 <?php
 
+use App\Models\Contribution;
+use App\Models\User;
+use App\Models\Wish;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia;
 use Tests\TestCase;
 
 /*
@@ -44,7 +48,39 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function signInAsAdmin(): User
 {
-    // ..
+    $admin = User::factory()->admin()->create();
+
+    test()->actingAs($admin);
+
+    return $admin;
+}
+
+function ownerWithAvailable(int $amount): User
+{
+    $owner = User::factory()->create();
+
+    Contribution::factory()->settledAt(now()->subWeek())->create([
+        'wish_id' => Wish::factory()->create(['user_id' => $owner->id])->id,
+        'amount' => $amount,
+    ]);
+
+    return $owner;
+}
+
+/**
+ * What the finance page reports as available to its owner.
+ */
+function availableFor(User $owner): int
+{
+    $available = 0;
+
+    test()->actingAs($owner)->get(route('dashboard.finance'))->assertInertia(
+        function (AssertableInertia $page) use (&$available) {
+            $available = $page->toArray()['props']['balance']['available'];
+        }
+    );
+
+    return $available;
 }

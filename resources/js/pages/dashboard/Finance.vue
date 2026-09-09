@@ -317,6 +317,21 @@ function payoutOf(withdrawal: Withdrawal): number {
                                     </time>
                                 </dd>
                             </div>
+                            <div
+                                v-if="withdrawal.decided_at"
+                                class="flex items-center justify-between gap-3"
+                            >
+                                <dt class="text-slate-500">
+                                    تاریخ تعیین تکلیف
+                                </dt>
+                                <dd class="font-bold text-slate-700">
+                                    <time :datetime="withdrawal.decided_at">
+                                        {{
+                                            formatMoment(withdrawal.decided_at)
+                                        }}
+                                    </time>
+                                </dd>
+                            </div>
                         </dl>
                     </li>
                 </ul>

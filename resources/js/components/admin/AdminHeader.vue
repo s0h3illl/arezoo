@@ -11,21 +11,21 @@ import { dashboard } from '@/routes/admin';
 import contributions from '@/routes/admin/contributions';
 import payments from '@/routes/admin/payments';
 import users from '@/routes/admin/users';
+import withdrawals from '@/routes/admin/withdrawals';
 
 const page = usePage();
 
 const isMenuOpen = ref(false);
 
 /**
- * Sections beyond these are not built yet, so they hold '#' until each one
- * gets a route.
+ * تنظیمات is not built yet, so it holds '#' until it gets a route.
  */
 const navItems = computed(() => [
     { label: 'داشبورد', href: dashboard().url },
     { label: 'کاربران', href: users.index().url },
     { label: 'مشارکت‌ها', href: contributions.index().url },
     { label: 'پرداخت‌ها', href: payments.index().url },
-    { label: 'برداشت‌ها', href: '#' },
+    { label: 'برداشت‌ها', href: withdrawals.index().url },
     { label: 'تنظیمات', href: '#' },
 ]);
 

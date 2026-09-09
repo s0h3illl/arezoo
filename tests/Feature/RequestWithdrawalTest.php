@@ -15,18 +15,6 @@ function sheba(): string
     return 'IR062960000000100324200001';
 }
 
-function ownerWithAvailable(int $amount): User
-{
-    $owner = User::factory()->create();
-
-    Contribution::factory()->settledAt(now()->subWeek())->create([
-        'wish_id' => Wish::factory()->create(['user_id' => $owner->id])->id,
-        'amount' => $amount,
-    ]);
-
-    return $owner;
-}
-
 test('a guest cannot request a withdrawal', function () {
     $this->post(route('dashboard.withdrawals.store'), [
         'amount' => 50_000,
