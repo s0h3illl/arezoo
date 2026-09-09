@@ -11,6 +11,8 @@ const props = defineProps<{
 
 const isVisible = computed(() => props.row.state === 'visible');
 
+const placeholder = computed(() => (props.row.state === 'deleted' ? '—' : '؟'));
+
 const initial = computed(() => [...props.row.contributor.name][0] ?? '');
 </script>
 
@@ -39,7 +41,7 @@ const initial = computed(() => [...props.row.contributor.name][0] ?? '');
                 aria-hidden="true"
                 class="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-400"
             >
-                ؟
+                {{ placeholder }}
             </span>
 
             <div class="min-w-0 flex-1">
@@ -67,6 +69,9 @@ const initial = computed(() => [...props.row.contributor.name][0] ?? '');
 
         <p class="mt-4 border-t border-slate-100 pt-3 text-xs text-slate-400">
             برای «{{ row.wish.title }}»
+            <span v-if="row.wish.deleted" class="text-slate-400">
+                (حذف‌شده)
+            </span>
         </p>
     </li>
 </template>

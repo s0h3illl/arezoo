@@ -83,9 +83,20 @@ const statusBadgeClasses: Record<ContributionStatus, string> = {
                             >
                                 <td class="px-5 py-4 font-bold text-slate-900">
                                     {{ contribution.wish.title }}
+                                    <span
+                                        v-if="contribution.wish.deleted"
+                                        class="font-normal text-slate-400"
+                                    >
+                                        (حذف‌شده)
+                                    </span>
                                 </td>
                                 <td class="px-5 py-4 text-slate-600">
-                                    {{ contribution.contributor.name }}
+                                    <span v-if="contribution.contributor">
+                                        {{ contribution.contributor.name }}
+                                    </span>
+                                    <span v-else class="text-slate-400">
+                                        کاربر حذف‌شده
+                                    </span>
                                 </td>
                                 <td
                                     dir="ltr"

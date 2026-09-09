@@ -102,6 +102,40 @@ test('a hidden contributor is masked, and the amount and the message still show'
     );
 });
 
+test('a message from a contributor who deleted their account reads as deleted, at every visibility', function (ContributionVisibility $visibility) {
+    $sara = User::factory()->create();
+    $wish = Wish::factory()->create(['user_id' => $sara->id, 'title' => 'a bike']);
+    $reza = User::factory()->create(['name' => 'Reza Ahmadi']);
+    Contribution::factory()->paid()->create([
+        'wish_id' => $wish->id,
+        'contributor_id' => $reza->id,
+        'visibility' => $visibility,
+        'message' => 'happy birthday',
+        'amount' => 120_000,
+    ]);
+
+    $reza->delete();
+
+    $this->actingAs($sara)->get(route('dashboard.messages'))->assertInertia(
+        fn (AssertableInertia $page) => $page->has(
+            'messages.data.0',
+            fn (AssertableInertia $row) => $row
+                ->where('state', 'deleted')
+                ->where('contributor.name', __('contributions.deleted'))
+                ->where('contributor.avatar', null)
+                ->where('message', 'happy birthday')
+                ->where('wish.title', 'a bike')
+                ->where('amount', 120_000)
+                ->has('id')
+                ->has('settled_at')
+        )
+    );
+})->with([
+    'public' => ContributionVisibility::Public,
+    'owner-only' => ContributionVisibility::OwnerOnly,
+    'hidden' => ContributionVisibility::Hidden,
+]);
+
 test('a public and an owner-only contributor are both named to the owner', function (ContributionVisibility $visibility) {
     $sara = User::factory()->create();
     $wish = Wish::factory()->create(['user_id' => $sara->id]);
@@ -176,6 +210,26 @@ test('the inbox loads fifteen messages at a time', function () {
         fn (AssertableInertia $page) => $page
             ->count('messages.data', 15)
             ->where('messages.meta.total', 16)
+            ->etc()
+    );
+});
+
+test('a message says its wish is deleted, and says nothing of the sort while the wish is alive', function () {
+    $sara = User::factory()->create();
+    $alive = Wish::factory()->create(['user_id' => $sara->id]);
+    $gone = Wish::factory()->create(['user_id' => $sara->id]);
+
+    Contribution::factory()->settledAt(now()->subDay())->create(['wish_id' => $alive->id, 'message' => 'a note']);
+    $onGone = Contribution::factory()->settledAt(now())->create(['wish_id' => $gone->id, 'message' => 'a note']);
+
+    $gone->delete();
+
+    $this->actingAs($sara)->get(route('dashboard.messages'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('messages.meta.total', 2)
+            ->where('messages.data.0.id', $onGone->id)
+            ->where('messages.data.0.wish.deleted', true)
+            ->where('messages.data.1.wish.deleted', false)
             ->etc()
     );
 });

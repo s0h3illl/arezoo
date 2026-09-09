@@ -112,10 +112,15 @@ class Wish extends Model
     /**
      * How many people have paid towards this wish.
      *
-     * Someone who gives more than once still counts as one contributor.
+     * Someone who gives more than once still counts as one contributor, unless
+     * they have deleted their account: nulled contributors cannot be told apart,
+     * so each of their contributions counts on its own.
      */
     public function contributorCount(): int
     {
-        return $this->paidContributions()->distinct()->count('contributor_id');
+        $named = $this->paidContributions()->whereNotNull('contributor_id')->distinct()->count('contributor_id');
+        $departed = $this->paidContributions()->whereNull('contributor_id')->count();
+
+        return $named + $departed;
     }
 }

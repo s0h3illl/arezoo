@@ -23,6 +23,21 @@ test('admin contributions list renders without javascript errors', function () {
         ->assertSee($contribution->payment->reference_id);
 });
 
+test('a row whose contributor deleted their account reads as deleted, never as anonymous', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $reza = User::factory()->create(['name' => 'Reza Ahmadi']);
+    Contribution::factory()->for($reza, 'contributor')->paid()->create();
+
+    $reza->delete();
+
+    $page = visit(route('admin.contributions.index', absolute: false));
+
+    $page->assertNoJavaScriptErrors()
+        ->assertSee(__('contributions.deleted'))
+        ->assertDontSee(__('contributions.anonymous'))
+        ->assertDontSee('Reza Ahmadi');
+});
+
 test('an empty list explains itself rather than showing a blank table', function () {
     $this->actingAs(User::factory()->admin()->create());
 
@@ -30,4 +45,16 @@ test('an empty list explains itself rather than showing a blank table', function
 
     $page->assertNoJavaScriptErrors()
         ->assertSee('هنوز مشارکتی ثبت نشده');
+});
+
+test('a row whose wish was deleted says so beside the title', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $contribution = Contribution::factory()->paid()->create();
+    $contribution->wish->delete();
+
+    $page = visit(route('admin.contributions.index', absolute: false));
+
+    $page->assertNoJavaScriptErrors()
+        ->assertSee($contribution->wish->title)
+        ->assertSee(__('contributions.deleted_wish'));
 });

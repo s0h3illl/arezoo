@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @property int $id
  * @property int $wish_id
- * @property int $contributor_id
+ * @property int|null $contributor_id
  * @property int $payment_id
  * @property int $amount
  * @property string|null $message
@@ -31,7 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Wish $wish
- * @property-read User $contributor
+ * @property-read User|null $contributor
  * @property-read Payment $payment
  */
 class Contribution extends Model

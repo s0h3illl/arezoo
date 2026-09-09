@@ -14,11 +14,12 @@ export type Contribution = {
     wish: {
         id: number;
         title: string;
+        deleted: boolean;
     };
     contributor: {
         id: number;
         name: string;
-    };
+    } | null;
     amount: number;
     status: ContributionStatus;
     settled_at: string | null;

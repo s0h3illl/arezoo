@@ -31,7 +31,7 @@ class ContributionResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @return array{id: int, wish: array{id: int, title: string}, contributor: array{id: int, name: string}, amount: int, status: ContributionStatus, settled_at: ?Carbon, payment: array{id: int, transaction_id: ?string, reference_id: ?string}}
+     * @return array{id: int, wish: array{id: int, title: string, deleted: bool}, contributor: ?array{id: int, name: string}, amount: int, status: ContributionStatus, settled_at: ?Carbon, payment: array{id: int, transaction_id: ?string, reference_id: ?string}}
      */
     public function toArray(Request $request): array
     {
@@ -40,8 +40,9 @@ class ContributionResource extends JsonResource
             'wish' => [
                 'id' => $this->wish->id,
                 'title' => $this->wish->title,
+                'deleted' => $this->wish->trashed(),
             ],
-            'contributor' => [
+            'contributor' => $this->contributor === null ? null : [
                 'id' => $this->contributor->id,
                 'name' => $this->contributor->name,
             ],

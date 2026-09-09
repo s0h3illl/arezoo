@@ -41,6 +41,30 @@ test('the contributor list, shows a named row and a masked one without javascrip
         ->assertSee(__('contributions.anonymous'));
 });
 
+test('the contributor list tells a deleted contributor apart from a masked one', function () {
+    $wish = Wish::factory()->create(['title' => 'دوچرخه', 'price' => 1_000_000]);
+    $reza = User::factory()->create(['name' => 'Reza Ahmadi']);
+    Contribution::factory()->paid()->create([
+        'wish_id' => $wish->id,
+        'contributor_id' => $reza->id,
+        'visibility' => ContributionVisibility::Hidden,
+        'amount' => 300_000,
+    ]);
+    Contribution::factory()->paid()->create([
+        'wish_id' => $wish->id,
+        'visibility' => ContributionVisibility::Hidden,
+        'amount' => 200_000,
+    ]);
+
+    $reza->delete();
+
+    visit(route('wishes.show', $wish, absolute: false))
+        ->assertNoJavaScriptErrors()
+        ->assertSee(__('contributions.deleted'))
+        ->assertSee(__('contributions.anonymous'))
+        ->assertDontSee('Reza Ahmadi');
+});
+
 test('the header carries the way back to the owner profile', function () {
     $sara = User::factory()->create(['username' => 'sara']);
     $wish = Wish::factory()->create(['user_id' => $sara->id]);

@@ -15,4 +15,8 @@ return [
 
     'anonymous' => 'ناشناس',
 
+    'deleted' => 'کاربر حذف‌شده',
+
+    'deleted_wish' => 'حذف‌شده',
+
 ];

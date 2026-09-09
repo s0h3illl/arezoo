@@ -107,6 +107,19 @@ test('a guest may not delete a wish, and is sent to sign in', function () {
     expect($wish->fresh()->trashed())->toBeFalse();
 });
 
+test('a contribution can still reach the wish it was made towards once that wish is deleted', function () {
+    $wish = Wish::factory()->create(['title' => 'a bicycle']);
+    $contribution = Contribution::factory()->paid()->create(['wish_id' => $wish->id]);
+
+    $wish->delete();
+
+    $contribution->refresh();
+
+    expect($contribution->wish)->not->toBeNull()
+        ->and($contribution->wish->title)->toBe('a bicycle')
+        ->and($contribution->wish->trashed())->toBeTrue();
+});
+
 /*
 | The foreign key was never softened — it is simply out of reach now. Force
 | deleting remains the deliberate full-purge path ADR-0003 describes, and nothing

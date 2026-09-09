@@ -18,26 +18,51 @@ class MessageResource extends JsonResource
     public static $wrap = null;
 
     /**
-     * @return array{id: int, state: 'visible'|'anonymous', contributor: array{name: string, avatar: ?string}, message: ?string, wish: array{title: string}, amount: int, settled_at: ?string}
+     * @return array{id: int, state: 'visible'|'anonymous'|'deleted', contributor: array{name: string, avatar: ?string}, message: ?string, wish: array{title: string, deleted: bool}, amount: int, settled_at: ?string}
      */
     public function toArray(Request $request): array
     {
-        $visible = $this->isVisible();
+        $state = $this->contributorState();
 
         return [
             'id' => $this->id,
-            'state' => $visible ? 'visible' : 'anonymous',
+            'state' => $state,
             'contributor' => [
-                'name' => $visible ? $this->contributor->name : $this->maskedName(),
-                'avatar' => $visible ? $this->contributor->avatarUrl() : null,
+                'name' => $this->contributorName($state),
+                'avatar' => $state === 'visible' ? $this->contributor->avatarUrl() : null,
             ],
             'message' => $this->message,
             'wish' => [
                 'title' => $this->wish->title,
+                'deleted' => $this->wish->trashed(),
             ],
             'amount' => $this->amount,
             'settled_at' => $this->settled_at?->diffForHumans(),
         ];
+    }
+
+    /**
+     * @return 'visible'|'anonymous'|'deleted'
+     */
+    private function contributorState(): string
+    {
+        if ($this->contributor === null) {
+            return 'deleted';
+        }
+
+        return $this->isVisible() ? 'visible' : 'anonymous';
+    }
+
+    /**
+     * @param  'visible'|'anonymous'|'deleted'  $state
+     */
+    private function contributorName(string $state): string
+    {
+        return match ($state) {
+            'visible' => $this->contributor->name,
+            'deleted' => (string) __('contributions.deleted'),
+            'anonymous' => (string) __('contributions.anonymous'),
+        };
     }
 
     private function isVisible(): bool
@@ -60,10 +85,5 @@ class MessageResource extends JsonResource
         }
 
         return auth()->user()->id === $this->wish->user_id;
-    }
-
-    private function maskedName(): string
-    {
-        return (string) __('contributions.anonymous');
     }
 }

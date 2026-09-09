@@ -11,6 +11,8 @@ const props = defineProps<{
 
 const isVisible = computed(() => props.row.state === 'visible');
 
+const placeholder = computed(() => (props.row.state === 'deleted' ? '—' : '؟'));
+
 /** Spread rather than indexed, so a two-code-unit letter is not cut in half. */
 const initial = computed(() => [...props.row.contributor.name][0] ?? '');
 </script>
@@ -37,7 +39,7 @@ const initial = computed(() => [...props.row.contributor.name][0] ?? '');
             aria-hidden="true"
             class="flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-400"
         >
-            ؟
+            {{ placeholder }}
         </span>
 
         <div class="min-w-0 flex-1">

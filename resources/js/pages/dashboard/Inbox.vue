@@ -32,7 +32,11 @@ defineProps<{
                 هنوز پیامی نداری
             </p>
 
-            <InfiniteScroll v-else data="messages" items-element="#message-list">
+            <InfiniteScroll
+                v-else
+                data="messages"
+                items-element="#message-list"
+            >
                 <ul id="message-list" class="mt-6 flex flex-col gap-4">
                     <MessageRow
                         v-for="row in messages.data"

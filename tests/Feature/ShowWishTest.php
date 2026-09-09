@@ -60,6 +60,41 @@ test('a hidden contribution carries the masked name and its real amount', functi
     );
 });
 
+test('a contribution whose contributor deleted their account reads as deleted, at every visibility', function (ContributionVisibility $visibility) {
+    $wish = Wish::factory()->create();
+    $reza = User::factory()->create(['name' => 'رضا احمدی']);
+    Contribution::factory()->paid()->create([
+        'wish_id' => $wish->id,
+        'contributor_id' => $reza->id,
+        'visibility' => $visibility,
+        'amount' => 120_000,
+    ]);
+
+    $reza->delete();
+
+    $this->actingAs($wish->owner);
+    $this->get(route('wishes.show', $wish))->assertInertia(
+        fn (AssertableInertia $page) => $page->has(
+            'contributions.data.0',
+            fn (AssertableInertia $row) => $row
+                ->where('state', 'deleted')
+                ->where('contributor.name', __('contributions.deleted'))
+                ->where('contributor.avatar', null)
+                ->missing('contributor.id')
+                ->where('amount', 120_000)
+                ->etc()
+        )
+    );
+})->with([
+    'public' => ContributionVisibility::Public,
+    'owner-only' => ContributionVisibility::OwnerOnly,
+    'hidden' => ContributionVisibility::Hidden,
+]);
+
+test('deleted and anonymous are different words', function () {
+    expect(__('contributions.deleted'))->not->toBe(__('contributions.anonymous'));
+});
+
 test('a visible contribution carries its contributor', function () {
     $wish = Wish::factory()->create();
     $contributor = User::factory()->create(['name' => 'John Doe']);

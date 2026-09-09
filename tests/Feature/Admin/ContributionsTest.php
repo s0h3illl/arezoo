@@ -66,6 +66,27 @@ test('a contribution still shows its contributor to the admin, whatever its visi
     'owner-only' => ContributionVisibility::OwnerOnly,
 ]);
 
+test('a contribution whose contributor deleted their account reads as deleted to the admin', function (ContributionVisibility $visibility) {
+    $this->actingAs(User::factory()->admin()->create());
+    $reza = User::factory()->create(['name' => 'رضا احمدی']);
+
+    Contribution::factory()
+        ->for($reza, 'contributor')
+        ->paid()
+        ->create(['visibility' => $visibility]);
+
+    $reza->delete();
+
+    $this->get(route('admin.contributions.index'))->assertOk()->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('contributions.data.0.contributor', null)
+    );
+})->with([
+    'public' => ContributionVisibility::Public,
+    'hidden' => ContributionVisibility::Hidden,
+    'owner-only' => ContributionVisibility::OwnerOnly,
+]);
+
 /*
 | Both identifiers, so a row here can be matched against the gateway's own
 | dashboard without a second lookup.
@@ -110,4 +131,20 @@ test('an authenticated user who is not an admin gets a 404', function () {
 
 test('a guest visitor gets a 404', function () {
     $this->get(route('admin.contributions.index'))->assertNotFound();
+});
+
+test('the admin list marks a contribution whose wish is deleted', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $alive = Contribution::factory()->paid()->create();
+    $gone = Contribution::factory()->paid()->create();
+    $gone->wish->delete();
+
+    $this->get(route('admin.contributions.index'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('contributions.data.0.id', $gone->id)
+            ->where('contributions.data.0.wish.deleted', true)
+            ->where('contributions.data.1.id', $alive->id)
+            ->where('contributions.data.1.wish.deleted', false)
+            ->etc()
+    );
 });
