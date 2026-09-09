@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 
 import PaginationLink from '@/components/admin/PaginationLink.vue';
+import WithdrawalNoteDialog from '@/components/admin/WithdrawalNoteDialog.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { formatMoment, formatToman } from '@/lib/format';
 import { update } from '@/routes/admin/withdrawals';
@@ -228,14 +229,9 @@ function reject(withdrawal: Withdrawal): void {
                                         >
                                             رد
                                         </button>
-                                        <span
-                                            v-if="
-                                                withdrawal.status === 'paid' ||
-                                                withdrawal.status === 'rejected'
-                                            "
-                                            class="text-slate-400"
-                                            >—</span
-                                        >
+                                        <WithdrawalNoteDialog
+                                            :withdrawal="withdrawal"
+                                        />
                                     </div>
                                 </td>
                             </tr>

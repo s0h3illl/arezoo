@@ -206,6 +206,7 @@ return [
         'description' => 'توضیح',
         'email' => 'ایمیل',
         'name' => 'نام',
+        'note' => 'یادداشت',
         'password' => 'رمز عبور',
         'password_confirmation' => 'تکرار رمز عبور',
         'price' => 'قیمت',

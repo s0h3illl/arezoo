@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\UserPasswordController;
 use App\Http\Controllers\Admin\WithdrawalController;
+use App\Http\Controllers\Admin\WithdrawalNoteController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
 
@@ -25,4 +26,6 @@ Route::middleware(EnsureUserIsAdmin::class)
         Route::resource('contributions', ContributionController::class)->only(['index']);
         Route::resource('payments', PaymentController::class)->only(['index']);
         Route::resource('withdrawals', WithdrawalController::class)->only(['index', 'update']);
+        Route::put('withdrawals/{withdrawal}/note', [WithdrawalNoteController::class, 'update'])
+            ->name('withdrawals.note.update');
     });

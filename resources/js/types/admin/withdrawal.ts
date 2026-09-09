@@ -13,6 +13,7 @@ export type Withdrawal = {
     transfer: number;
     sheba: string;
     status: WithdrawalStatus;
+    note: string;
     requested_at: string;
     decided_at: string | null;
 };

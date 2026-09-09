@@ -238,3 +238,50 @@ test('the owner sees the rejected state and its date on their finance page', fun
             ->etc()
     );
 });
+
+test('the owner reads the note an admin left beside the request it belongs to', function () {
+    $sara = User::factory()->create();
+    Withdrawal::factory()->rejected()->create([
+        'user_id' => $sara->id,
+        'note' => 'شماره شبایی که دادی مال بانک دیگه‌ایه.',
+    ]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('withdrawals.0.note', 'شماره شبایی که دادی مال بانک دیگه‌ایه.')
+            ->etc()
+    );
+});
+
+test('a withdrawal nobody has written a note on carries an empty note', function () {
+    $sara = User::factory()->create();
+    Withdrawal::factory()->create(['user_id' => $sara->id]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('withdrawals.0.note', '')->etc()
+    );
+});
+
+test('one owner cannot read the notes on another owner\'s withdrawals', function () {
+    $sara = User::factory()->create();
+    Withdrawal::factory()->rejected()->create([
+        'user_id' => User::factory()->create()->id,
+        'note' => 'شبات درست نیست.',
+    ]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page->has('withdrawals', 0)
+    );
+});
+
+test('an owner cannot write a note through the request form', function () {
+    $sara = ownerWithAvailable(500_000);
+
+    $this->actingAs($sara)->post(route('dashboard.withdrawals.store'), [
+        'amount' => 100_000,
+        'sheba' => 'IR820540102680020817909002',
+        'note' => 'خودم نوشتم',
+    ])->assertRedirect();
+
+    expect(Withdrawal::query()->sole()->note)->toBe('');
+});

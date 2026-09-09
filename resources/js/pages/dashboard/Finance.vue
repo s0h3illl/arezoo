@@ -333,6 +333,14 @@ function payoutOf(withdrawal: Withdrawal): number {
                                 </dd>
                             </div>
                         </dl>
+
+                        <p
+                            v-if="withdrawal.note"
+                            data-test="withdrawal-note"
+                            class="mt-4 rounded-2xl bg-slate-50 px-5 py-4 text-[13px] leading-loose whitespace-pre-line text-slate-600"
+                        >
+                            {{ withdrawal.note }}
+                        </p>
                     </li>
                 </ul>
             </section>

@@ -250,3 +250,119 @@ test('a non-admin cannot reject a withdrawal, and a guest gets the same 404', fu
 
     expect($withdrawal->refresh()->status)->toBe(WithdrawalStatus::Requested);
 });
+
+test('an admin can write a note on a withdrawal in any state', function (string $state) {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->{$state}()->create();
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => 'شبات درست نیست.'])
+        ->assertRedirect();
+
+    expect($withdrawal->refresh()->note)->toBe('شبات درست نیست.');
+})->with(['requested', 'accepted', 'paid', 'rejected']);
+
+test('a note can be rewritten', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->rejected()->create(['note' => 'اولی']);
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => 'دومی'])
+        ->assertRedirect();
+
+    expect($withdrawal->refresh()->note)->toBe('دومی');
+});
+
+test('a note is optional and may be emptied', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->rejected()->create(['note' => 'اولی']);
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => ''])
+        ->assertRedirect();
+
+    expect($withdrawal->refresh()->note)->toBe('');
+});
+
+test('saving a note changes nothing else about the withdrawal', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->accepted()->create([
+        'amount' => 200_000,
+        'fee' => 12_500,
+        'sheba' => 'IR062960000000100324200001',
+        'requested_at' => now()->subWeek(),
+        'decided_at' => now()->subDay(),
+    ]);
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal), [
+        'note' => 'در حال بررسی',
+        'amount' => 900_000,
+        'fee' => 0,
+        'sheba' => 'IR820540102680020817909002',
+        'status' => 'paid',
+    ])->assertRedirect();
+
+    $fresh = $withdrawal->fresh();
+    expect($fresh->amount)->toBe(200_000)
+        ->and($fresh->fee)->toBe(12_500)
+        ->and($fresh->sheba)->toBe('IR062960000000100324200001')
+        ->and($fresh->status)->toBe(WithdrawalStatus::Accepted)
+        ->and($fresh->requested_at->equalTo($withdrawal->requested_at))->toBeTrue()
+        ->and($fresh->decided_at->equalTo($withdrawal->decided_at))->toBeTrue();
+});
+
+test('the note reaches the queue row', function () {
+    signInAsAdmin();
+    Withdrawal::factory()->create(['note' => 'شبات درست نیست.']);
+
+    $this->get(route('admin.withdrawals.index'))->assertInertia(
+        fn (AssertableInertia $page) => $page->where('withdrawals.data.0.note', 'شبات درست نیست.')
+    );
+});
+
+test('a non-admin cannot write a note', function () {
+    $withdrawal = Withdrawal::factory()->create(['note' => '']);
+
+    $this->actingAs(User::factory()->create())
+        ->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => 'خودم نوشتم'])
+        ->assertNotFound();
+
+    expect($withdrawal->refresh()->note)->toBe('');
+});
+
+test('a guest gets the same 404 when writing a note', function () {
+    $withdrawal = Withdrawal::factory()->create(['note' => '']);
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => 'خودم نوشتم'])
+        ->assertNotFound();
+
+    expect($withdrawal->refresh()->note)->toBe('');
+});
+
+test('the owner of a withdrawal cannot write its note', function () {
+    $owner = User::factory()->create();
+    $withdrawal = Withdrawal::factory()->for($owner, 'owner')->create(['note' => '']);
+
+    $this->actingAs($owner)
+        ->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => 'خودم نوشتم'])
+        ->assertNotFound();
+
+    expect($withdrawal->refresh()->note)->toBe('');
+});
+
+test('a note longer than the column is meant to hold is refused', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->create(['note' => '']);
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal), ['note' => str_repeat('ا', 2_001)])
+        ->assertSessionHasErrors('note');
+
+    expect($withdrawal->refresh()->note)->toBe('');
+});
+
+test('a request carrying no note at all is refused rather than emptying one', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->create(['note' => 'اولی']);
+
+    $this->put(route('admin.withdrawals.note.update', $withdrawal))
+        ->assertSessionHasErrors('note');
+
+    expect($withdrawal->refresh()->note)->toBe('اولی');
+});

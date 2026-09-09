@@ -35,3 +35,22 @@ test('a rejected withdrawal shows no accept, mark-paid, or reject action', funct
         ->assertMissing('@mark-paid')
         ->assertMissing('@reject');
 });
+
+test('a row carries a note action in every state', function (string $state) {
+    $this->actingAs(User::factory()->admin()->create());
+    Withdrawal::factory()->{$state}()->create();
+
+    visit(route('admin.withdrawals.index', absolute: false))
+        ->assertPresent('@note');
+})->with(['requested', 'accepted', 'paid', 'rejected']);
+
+test('the note modal opens without any errors', function () {
+    $this->actingAs(User::factory()->admin()->create());
+    $withdrawal = Withdrawal::factory()->paid()->create(['note' => 'یادداشت قبلی']);
+
+    visit(route('admin.withdrawals.index', absolute: false))
+        ->click('@note')
+        ->assertValue("#withdrawal-{$withdrawal->id}-note", 'یادداشت قبلی')
+        ->assertPresent('@save-note')
+        ->assertNoJavaScriptErrors();
+});

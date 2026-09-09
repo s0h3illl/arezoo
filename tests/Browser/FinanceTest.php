@@ -72,3 +72,31 @@ test('an owner who has withdrawn everything sees their history rather than the n
         ->assertNotPresent('@no-earnings')
         ->assertPresent('@withdrawal-row');
 });
+
+test('the owner reads the note on the request it belongs to', function () {
+    $sara = User::factory()->create();
+    $message = 'message from admin';
+
+    Withdrawal::factory()->rejected()->create([
+        'user_id' => $sara->id,
+        'note' => $message,
+    ]);
+
+    $this->actingAs($sara);
+
+    visit(route('dashboard.finance', absolute: false))
+        ->assertNoJavaScriptErrors()
+        ->assertSee($message);
+});
+
+test('a request nobody wrote a note on renders no note element at all', function () {
+    $sara = User::factory()->create();
+
+    Withdrawal::factory()->rejected()->create(['user_id' => $sara->id]);
+
+    $this->actingAs($sara);
+
+    visit(route('dashboard.finance', absolute: false))
+        ->assertPresent('@withdrawal-row')
+        ->assertNotPresent('@withdrawal-note');
+});
