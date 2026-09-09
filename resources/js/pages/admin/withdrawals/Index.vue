@@ -5,9 +5,8 @@ import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { formatMoment, formatToman } from '@/lib/format';
 import { update } from '@/routes/admin/withdrawals';
-import type { Paginated } from '@/types';
+import type { Paginated, WithdrawalStatus } from '@/types';
 import type { Withdrawal } from '@/types/admin';
-import type { WithdrawalStatus } from '@/types';
 
 defineOptions({ layout: AdminLayout });
 
@@ -53,6 +52,22 @@ function markPaid(withdrawal: Withdrawal): void {
     router.patch(
         update.url(withdrawal.id),
         { action: 'pay' },
+        { preserveScroll: true },
+    );
+}
+
+function reject(withdrawal: Withdrawal): void {
+    if (
+        !window.confirm(
+            `درخواست برداشت ${withdrawal.owner.name} رد بشه؟ مبلغش به موجودی قابل برداشتش برمی‌گرده.`,
+        )
+    ) {
+        return;
+    }
+
+    router.patch(
+        update.url(withdrawal.id),
+        { action: 'reject' },
         { preserveScroll: true },
     );
 }
@@ -175,27 +190,53 @@ function markPaid(withdrawal: Withdrawal): void {
                                     </span>
                                 </td>
                                 <td class="px-5 py-4">
-                                    <button
-                                        v-if="withdrawal.status === 'requested'"
-                                        type="button"
-                                        data-test="accept"
-                                        class="rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
-                                        @click="accept(withdrawal)"
-                                    >
-                                        تأیید
-                                    </button>
-                                    <button
-                                        v-else-if="
-                                            withdrawal.status === 'accepted'
-                                        "
-                                        type="button"
-                                        data-test="mark-paid"
-                                        class="rounded-full bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 transition-colors hover:bg-sky-100 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
-                                        @click="markPaid(withdrawal)"
-                                    >
-                                        ثبت پرداخت
-                                    </button>
-                                    <span v-else class="text-slate-400">—</span>
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            v-if="
+                                                withdrawal.status ===
+                                                'requested'
+                                            "
+                                            type="button"
+                                            data-test="accept"
+                                            class="rounded-full bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700 transition-colors hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
+                                            @click="accept(withdrawal)"
+                                        >
+                                            تأیید
+                                        </button>
+                                        <button
+                                            v-else-if="
+                                                withdrawal.status === 'accepted'
+                                            "
+                                            type="button"
+                                            data-test="mark-paid"
+                                            class="rounded-full bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 transition-colors hover:bg-sky-100 focus-visible:ring-2 focus-visible:ring-emerald-500/40 focus-visible:outline-none"
+                                            @click="markPaid(withdrawal)"
+                                        >
+                                            ثبت پرداخت
+                                        </button>
+
+                                        <button
+                                            v-if="
+                                                withdrawal.status ===
+                                                    'requested' ||
+                                                withdrawal.status === 'accepted'
+                                            "
+                                            type="button"
+                                            data-test="reject"
+                                            class="rounded-full bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition-colors hover:bg-rose-100 focus-visible:ring-2 focus-visible:ring-rose-500/40 focus-visible:outline-none"
+                                            @click="reject(withdrawal)"
+                                        >
+                                            رد
+                                        </button>
+                                        <span
+                                            v-if="
+                                                withdrawal.status === 'paid' ||
+                                                withdrawal.status === 'rejected'
+                                            "
+                                            class="text-slate-400"
+                                            >—</span
+                                        >
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

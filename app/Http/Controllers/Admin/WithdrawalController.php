@@ -30,6 +30,7 @@ class WithdrawalController extends Controller
         match ($request->decision()) {
             WithdrawalDecision::Accept => $withdrawal->accept(),
             WithdrawalDecision::Pay => $withdrawal->markPaid(),
+            WithdrawalDecision::Reject => $withdrawal->reject(),
         };
 
         return back();

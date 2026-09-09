@@ -78,6 +78,16 @@ class Withdrawal extends Model
         ]);
     }
 
+    public function reject(): void
+    {
+        abort_unless(in_array($this->status, [WithdrawalStatus::Requested, WithdrawalStatus::Accepted], true), 403);
+
+        $this->update([
+            'status' => WithdrawalStatus::Rejected,
+            'decided_at' => now(),
+        ]);
+    }
+
     /**
      * @param  Builder<$this>  $query
      */

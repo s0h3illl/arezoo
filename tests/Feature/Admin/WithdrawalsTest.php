@@ -163,3 +163,90 @@ test('a guest gets the same 404 from the queue and its actions', function () {
     $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'accept'])
         ->assertNotFound();
 });
+
+test('an admin can reject a requested withdrawal, and the time is recorded', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->requested()->create();
+
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject'])
+        ->assertRedirect();
+
+    $withdrawal->refresh();
+    expect($withdrawal->status)->toBe(WithdrawalStatus::Rejected)
+        ->and($withdrawal->decided_at)->not->toBeNull();
+});
+
+test('an admin can reject an accepted withdrawal, and the time is recorded', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->accepted()->create(['decided_at' => now()->subDay()]);
+
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject'])
+        ->assertRedirect();
+
+    $withdrawal->refresh();
+    expect($withdrawal->status)->toBe(WithdrawalStatus::Rejected)
+        ->and($withdrawal->decided_at->isToday())->toBeTrue();
+});
+
+test('rejecting returns the amount to the available balance immediately', function () {
+    $owner = ownerWithAvailable(500_000);
+    $withdrawal = Withdrawal::factory()->for($owner, 'owner')->requested()->create(['amount' => 200_000]);
+
+    expect(availableFor($owner))->toBe(300_000);
+
+    signInAsAdmin();
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject'])
+        ->assertRedirect();
+
+    expect(availableFor($owner))->toBe(500_000);
+});
+
+test('after a rejection the owner can request the same money again', function () {
+    $owner = ownerWithAvailable(500_000);
+    $withdrawal = Withdrawal::factory()->for($owner, 'owner')->requested()->create(['amount' => 500_000]);
+
+    signInAsAdmin();
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject']);
+
+    $this->actingAs($owner)->post(route('dashboard.withdrawals.store'), [
+        'amount' => 500_000,
+        'sheba' => 'IR062960000000100324200001',
+    ])->assertRedirect();
+
+    expect(Withdrawal::query()->reserving()->where('user_id', $owner->id)->sum('amount'))->toBe(500_000);
+});
+
+test('a rejected withdrawal cannot be changed again by any route', function (string $action) {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->rejected()->create();
+
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => $action])
+        ->assertForbidden();
+
+    expect($withdrawal->refresh()->status)->toBe(WithdrawalStatus::Rejected);
+})->with(['accept', 'pay', 'reject']);
+
+test('a paid withdrawal cannot be rejected', function () {
+    signInAsAdmin();
+    $withdrawal = Withdrawal::factory()->paid()->create();
+
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject'])
+        ->assertForbidden();
+
+    expect($withdrawal->refresh()->status)->toBe(WithdrawalStatus::Paid);
+});
+
+test('a non-admin cannot reject a withdrawal, and a guest gets the same 404', function () {
+    $withdrawal = Withdrawal::factory()->requested()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject'])
+        ->assertNotFound();
+
+    auth()->logout();
+
+    $this->patch(route('admin.withdrawals.update', $withdrawal), ['action' => 'reject'])
+        ->assertNotFound();
+
+    expect($withdrawal->refresh()->status)->toBe(WithdrawalStatus::Requested);
+});

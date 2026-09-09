@@ -1,6 +1,6 @@
 # 04 — Reject a withdrawal
 
-**Status:** ready-for-agent
+**Status:** done. `tests/Feature/Admin/WithdrawalsTest.php`, `tests/Feature/FinanceTest.php`, `tests/Browser/Admin/WithdrawalsTest.php` green; Pint, larastan clean.
 
 ## Parent
 
@@ -18,19 +18,19 @@ An owner cannot reject, cancel, or otherwise end their own request, and has no i
 
 ## Acceptance criteria
 
-- [ ] A row carries a reject action while it is `Requested` or `Accepted`
-- [ ] An admin can reject a `Requested` withdrawal, and the time is recorded
-- [ ] An admin can reject an `Accepted` withdrawal, and the time is recorded
-- [ ] Rejecting confirms through `window.confirm` with a Persian question, matching `admin/users/Show.vue`
-- [ ] Rejecting returns the amount to the owner's available balance immediately, with no separate action needed
-- [ ] A `Rejected` withdrawal shows no accept, mark-paid, or reject action
-- [ ] A `Rejected` withdrawal cannot be changed again by any route, including back to `Requested`
-- [ ] A `Paid` withdrawal cannot be rejected
-- [ ] After a rejection the owner can request again, and a test proves the previously reserved money is requestable
-- [ ] The owner sees the rejected state and its date on their finance page
-- [ ] There is no route by which an owner can end their own request
-- [ ] A non-admin cannot reject a withdrawal (404), and a guest gets the same 404
-- [ ] Pint clean, larastan clean
+- [x] A row carries a reject action while it is `Requested` or `Accepted`
+- [x] An admin can reject a `Requested` withdrawal, and the time is recorded
+- [x] An admin can reject an `Accepted` withdrawal, and the time is recorded
+- [x] Rejecting confirms through `window.confirm` with a Persian question, matching `admin/users/Show.vue`
+- [x] Rejecting returns the amount to the owner's available balance immediately, with no separate action needed
+- [x] A `Rejected` withdrawal shows no accept, mark-paid, or reject action
+- [x] A `Rejected` withdrawal cannot be changed again by any route, including back to `Requested`
+- [x] A `Paid` withdrawal cannot be rejected
+- [x] After a rejection the owner can request again, and a test proves the previously reserved money is requestable
+- [x] The owner sees the rejected state and its date on their finance page
+- [x] There is no route by which an owner can end their own request
+- [x] A non-admin cannot reject a withdrawal (404), and a guest gets the same 404
+- [x] Pint clean, larastan clean
 
 ## Blocked by
 

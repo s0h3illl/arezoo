@@ -6,4 +6,5 @@ enum WithdrawalDecision: string
 {
     case Accept = 'accept';
     case Pay = 'pay';
+    case Reject = 'reject';
 }

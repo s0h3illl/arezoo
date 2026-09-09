@@ -222,3 +222,19 @@ test('the owner sees the state and the decision date once an admin has decided a
             ->etc()
     );
 });
+
+test('the owner sees the rejected state and its date on their finance page', function () {
+    $sara = User::factory()->create();
+    $decidedAt = now()->subHours(3)->startOfSecond();
+    Withdrawal::factory()->rejected()->create([
+        'user_id' => $sara->id,
+        'decided_at' => $decidedAt,
+    ]);
+
+    $this->actingAs($sara)->get(route('dashboard.finance'))->assertInertia(
+        fn (AssertableInertia $page) => $page
+            ->where('withdrawals.0.status', 'rejected')
+            ->where('withdrawals.0.decided_at', $decidedAt->toJson())
+            ->etc()
+    );
+});
