@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Faq;
-use Database\Seeders\FaqSeeder;
 use Inertia\Testing\AssertableInertia;
 
 test('a user reaches the landing page', function () {
