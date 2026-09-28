@@ -45,7 +45,13 @@ return [
             'port' => env('MAIL_PORT', 2525),
             'username' => env('MAIL_USERNAME'),
             'password' => env('MAIL_PASSWORD'),
-            'timeout' => null,
+            // Bounded on purpose. The framework's default is no timeout at all, which
+            // is the right answer for a transactional provider and a terrible one for
+            // a service that is simply not running: a registration would hang for
+            // PHP's 60 second socket default and then fail, which reads as a broken
+            // application rather than as a missing mail service. Ten seconds is far
+            // longer than handing a message to a local service can take.
+            'timeout' => (int) env('MAIL_TIMEOUT', 10),
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 

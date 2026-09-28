@@ -17,7 +17,11 @@ return [
 
     'ssr' => [
         'enabled' => true,
-        'url' => 'http://127.0.0.1:13714',
+        // The SSR server is started by the asset container, so the address of it is
+        // a property of where this process is running rather than a constant: the
+        // loopback default is right for a single-machine run, and the compose stack
+        // overrides it with the service name that actually resolves across containers.
+        'url' => env('INERTIA_SSR_URL', 'http://127.0.0.1:13714'),
         // 'bundle' => base_path('bootstrap/ssr/ssr.mjs'),
 
     ],

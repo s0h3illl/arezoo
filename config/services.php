@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Mailpit
+    |--------------------------------------------------------------------------
+    |
+    | The development mail service (docker/compose.yaml). It is not a third party
+    | the application talks to — it never sends anything anywhere — so what belongs
+    | here is only the address a test uses to ask the service what it received, and
+    | the SMTP coordinates the application itself reaches it on.
+    |
+    | The two are the same service reached two ways, and they are kept apart
+    | deliberately: SMTP is where mail is handed over, the API is where a test reads
+    | it back, and a test that got them confused would prove nothing. Compose points
+    | both at the container's service name; a run outside Docker uses loopback.
+    |
+    */
+
+    'mailpit' => [
+        'api_url' => env('MAILPIT_API_URL', 'http://127.0.0.1:8025'),
+        'smtp_host' => env('MAILPIT_SMTP_HOST', '127.0.0.1'),
+        'smtp_port' => (int) env('MAILPIT_SMTP_PORT', 1025),
+    ],
+
 ];
