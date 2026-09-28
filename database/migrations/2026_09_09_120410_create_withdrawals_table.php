@@ -17,7 +17,10 @@ return new class extends Migration
             $table->unsignedInteger('fee');
             $table->string('sheba', 26);
             $table->string('status')->default(WithdrawalStatus::Requested->value);
-            $table->text('note')->default('');
+            // No column default, unlike its neighbours. MySQL rejects a default on a
+            // TEXT column outright (error 1101) where SQLite accepts one, so the
+            // default lives where it belongs anyway: Withdrawal's $attributes.
+            $table->text('note');
             $table->timestamp('requested_at');
             $table->timestamp('decided_at')->nullable();
             $table->timestamps();

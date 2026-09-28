@@ -13,6 +13,12 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     *
+     * Note the ordering: this file's timestamp must stay later than
+     * create_payments_table. MySQL refuses to add a foreign key to a table that does
+     * not exist yet (error 1824), and unlike SQLite it will not defer the check, so
+     * a contribution created before payments fails outright rather than
+     * silently succeeding the way it does under the test suite's SQLite.
      */
     public function up(): void
     {
