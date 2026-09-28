@@ -1,0 +1,182 @@
+# The application's front door, and the whole of the web-facing layer.
+#
+# Terminates TLS, serves the compiled front end and uploads, and bridges HTTP to
+# php-fpm. It used to be the second half of a pair — Caddy in front, terminating
+# TLS and proxying plain HTTP to this file — and the bridging was the entire
+# reason this container existed, because Caddy speaks HTTP and php-fpm speaks
+# FastCGI. As the edge there is no second language in the path, so the two halves
+# became one.
+#
+# This is a template, not a plain config. nginx's entrypoint runs envsubst over
+# /etc/nginx/templates/*.template before starting, which is how ${DOMAIN} and
+# ${CERT_PATH} get their values from the environment rather than from a
+# committed hostname. The filter that restricts this to those two names is set in
+# compose.production.yaml; without it envsubst would also replace $host, $scheme
+# and every other nginx variable in this file with an empty string.
+#
+# The TLS certificate is not managed here. certbot runs on the host, renews on a
+# timer, and reloads this container from a deploy hook. See docs/deployment.md.
+
+# Report the scheme to the application as $scheme, never as a header a visitor sent.
+#
+# The obvious version of this passes through an incoming X-Forwarded-Proto, and
+# while a proxy sat in front of this container that was correct: the only client
+# that could reach this port was that proxy, and it overwrote the header with the
+# real scheme rather than appending to it. That is no longer true. This container
+# is the edge, so the header now arrives from whoever is making the request, and
+# passing it through would let a visitor send `X-Forwarded-Proto: http` and talk
+# Laravel into a session cookie issued without the Secure flag, and a
+# password-reset link built with an http:// host that mail clients refuse to open.
+#
+# $scheme is used instead because this container terminates the TLS connection, so
+# it knows the answer and cannot be lied into it.
+
+server {
+    # Port 80 exists for two things only: the ACME challenge, and the redirect.
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    # The challenge has to be answered over plain HTTP and must not be redirected
+    # to HTTPS, or Let's Encrypt gets a 301 where it asked for a file. ^~ so this
+    # prefix wins over the regex locations below, and so a dotfile rule elsewhere
+    # in this file cannot deny it.
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type "text/plain";
+        access_log off;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+
+    # QUIC. Off by default in the compose file's published ports because some
+    # networks drop UDP, and a client with a QUIC path it cannot use falls back to
+    # TCP — which this still supports, so the only cost of leaving it off is a
+    # little latency.
+    http2 on;
+
+    # The bare domain and www both answer, and both are on the certificate, so a
+    # link shared either way works.
+    server_name ${DOMAIN} www.${DOMAIN};
+
+    root /var/www/html/public;
+    index index.php;
+    charset utf-8;
+
+    # Matches upload_max_filesize and post_max_size in docker/app/zz-production.ini.
+    # Whichever of the three is lowest is the one that applies, so all three agree.
+    client_max_body_size 12M;
+
+    # The nginx version is not useful to a visitor and is free to withhold.
+    # Hiding the header entirely needs a module this image does not carry; this
+    # removes the version, which is the part worth removing.
+    server_tokens off;
+
+    ssl_certificate     ${CERT_PATH}/fullchain.pem;
+    ssl_certificate_key ${CERT_PATH}/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    # OCSP stapling, so a client that checks does not have to ask the CA. Resolver
+    # 1.1.1.1 is a literal rather than /etc/resolv.conf on purpose: this container
+    # inherits the host's resolver, which on a host using a local stub points back
+    # at the host, and a loop here fails every stapling attempt rather than none.
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 1.1.1.1 8.8.8.8 valid=300s;
+    resolver_timeout 5s;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    access_log /dev/stdout;
+    error_log  /dev/stderr warn;
+
+    # Static assets. Vite fingerprints these filenames, so a given URL's contents
+    # can never change — a year-long immutable cache is safe, and the reason a
+    # deploy is not visible to returning visitors until they reload.
+    location /build/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # A visitor's own uploads. The same fingerprinting does not apply, so this is
+    # capped at a day rather than a year, or a replaced image would be served from
+    # cache long after it changed.
+    location /storage/ {
+        expires 1d;
+        add_header Cache-Control "public";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Inertia owns this application's history: a page URL has to reach the
+    # framework so it can answer with the right page component, and anything
+    # genuinely missing must fall through to index.php rather than to nginx's own
+    # 404, which would be a bare page outside the app's Persian layout.
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    # Never cached. This is the whole application, and caching it would serve one
+    # visitor's page to the next.
+    location = /index.php {
+        include fastcgi_params;
+        fastcgi_pass app:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        # The scheme, as established above: this container's own $scheme, never a
+        # header the visitor sent. Laravel reads this to build the links in a
+        # verification or password-reset email, and to decide whether to put Secure
+        # on a session cookie, so getting it wrong is a support problem rather
+        # than an error anyone sees.
+        fastcgi_param HTTP_X_FORWARDED_PROTO $scheme;
+        # Set rather than inherited, so a visitor cannot put their own Host header
+        # in front of Laravel and have it appear in a signed URL. Laravel trusts
+        # proxies at '*' — safe only because nothing reaches php-fpm except this
+        # container — so what this container says is what the application believes.
+        fastcgi_param HTTP_X_FORWARDED_HOST $host;
+        fastcgi_param HTTP_X_REAL_IP $remote_addr;
+        # The same reasoning, for the client's address. nginx passes a visitor's
+        # own request headers through to FastCGI — proven by the fact that
+        # User-Agent and Accept arrive unaltered — so any forwarded-* header not
+        # named explicitly here is one the visitor controls. Caddy used to set
+        # this to the real client address; as the edge, that address is
+        # $remote_addr. Left unset, anyone can claim any IP by sending
+        # X-Forwarded-For, which is enough to walk around a rate limiter keyed
+        # on the client address.
+        fastcgi_param HTTP_X_FORWARDED_FOR $remote_addr;
+        fastcgi_read_timeout 60;
+    }
+
+    # A .php file anywhere else is a request for a script that should never be
+    # reached over HTTP. Refused rather than executed, so that a file which somehow
+    # lands outside public/ cannot be run by URL.
+    location ~ \.php$ {
+        return 404;
+    }
+
+    # Dotfiles. .well-known is exempt because that is where the ACME challenge and
+    # a renewal's own bookkeeping live.
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}

@@ -8,7 +8,7 @@ able to send; this one is about getting to that point.
 
 ---
 
-## What is actually broken right now
+## What is actually broken by default
 
 `MAIL_MAILER=log` is the shipped default, and it is correct until a mail server
 exists. But the failure it causes is not an error — it is silence:
@@ -26,72 +26,89 @@ server before telling anyone the site is up.
 
 ---
 
-## Choosing where it runs
+## Which server
 
-Mailcow is a good choice for this: mature, well documented, and it gives you a
-webmail UI, IMAP, and ActiveSync as well as the SMTP submission the application
-needs. It is also a *large* stack — 10+ containers, officially 6 GiB of RAM minimum.
+Two things decide it, and both are about the machine rather than the application.
 
-**A separate server for mail is the strongly recommended layout**, for reasons that
-are not about the application:
+**Mailcow does not fit on a small host.** It is mature and gives you webmail, IMAP
+and ActiveSync, but it is 10+ containers and officially 6 GiB of RAM. It also binds
+ports 25, 80, 443, 110, 143, 465, 587, 993, 995 and 4190, so sharing a host with
+the web stack means reconfiguring one to get the other.
 
-- Mailcow documents needing a dedicated host, and it binds ports 25, 80, 443, 110,
-  143, 465, 587, 993, 995 and 4190. The application's Caddy already owns 80 and 443,
-  so sharing a host means reconfiguring one to get the other.
-- A second IP keeps the sending reputation of transactional mail separate from
-  whatever else the site sends, and gives you a place to fix a blacklisting without
-  touching the application server.
-- Mailcow running out of memory stops being a website outage.
-- A second small VPS is cheaper than the debugging it prevents.
+**emailwiz does fit, and is what this host runs.** Postfix, Dovecot, SpamAssassin,
+OpenDKIM and fail2ban — a few hundred megabytes, and it uses the ports mail
+actually needs. It has no webmail, which is a real limitation: you read mail with a
+normal client (Thunderbird, K-9, mutt) rather than in a browser. It authenticates
+against Unix accounts, so a mailbox is a user, not a row in a table.
 
-The rest of this document assumes that layout, and says what changes if you insist
-on one host.
-
----
-
-## Prerequisites
-
-These are the ones that take time to arrange, because they are not in your hands.
-
-```bash
-free -h | awk '/Mem/{print "RAM:", $2}'          # 6 GiB minimum for the full suite
-swapon --show                                  # want 1+ GiB
-# Is outbound 25 blocked? Most providers block it by default.
-timeout 10 bash -c 'cat </dev/null >/dev/tcp/mail.olabs.net/25' && echo "25 open" || echo "25 BLOCKED"
-```
-
-**Ask your provider to set PTR/rDNS** on the mail server's IP to
-`mail.yourdomain.com`. You cannot do this yourself, and every receiving domain will
-reject mail from an IP with no reverse DNS. Also ask them to confirm **outbound
-port 25 is unblocked** — if it is closed, none of the rest works.
+A separate server for mail remains the better *layout* — it keeps sending
+reputation separate from the web host, and a mail server that runs out of memory is
+not a website outage. On a host this size, though, it is a second VPS rather than a
+configuration choice, and emailwiz on the same host is the trade being made
+deliberately.
 
 ---
 
-## Install
+## Order of operations
+
+The sequence matters more than any individual step, because each one depends on
+the state the previous one left.
+
+1. **The certificate, while port 80 is still free.** emailwiz asks certbot for a
+   certificate for the mail host, and by default uses the standalone authenticator,
+   which needs port 80 to itself. Once the web stack is up it does not have it, and
+   the install fails on a step that looks nothing like the cause.
+
+   So: issue **one** certificate covering the site, `www` and the mail host first,
+   then symlink the mail host's name at it:
+
+   ```bash
+   ln -sfn your-domain.com /etc/letsencrypt/live/mail.your-domain.com
+   ```
+
+   emailwiz sees the directory exists and skips certbot entirely. One certificate,
+   one renewal, no chance of the two drifting apart — and a symlink is safe across
+   renewal because certbot updates what it points at rather than replacing the
+   entry. See [deployment.md](deployment.md#certificates).
+
+2. **emailwiz itself.** It prints the DNS records at the end. Do not skip to
+   configuring the application — the records have to exist before its mail is worth
+   testing.
+
+3. **The DNS records.** Four of them, plus one only the hosting provider can set.
+
+4. **Test delivery**, before pointing the application at it. If mail does not reach
+   Gmail, connecting the application only gives you a harder way to find that out.
+
+5. **Connect the application**, and register a real account.
+
+---
+
+## The mailbox for the application
+
+Give the application its own Unix user rather than borrowing a person's:
 
 ```bash
-git clone https://github.com/mailcow/mailcow-dockerized.git
-cd mailcow-dockerized
-./generate_config.sh        # it will offer to trim ClamAV if RAM is low
-docker compose pull
-docker compose up -d
+useradd -m -G mail arezoo
+passwd arezoo
 ```
 
-### Trimming for a 4 GB host
+A user in the `mail` group can receive mail. A dedicated account means the
+credential the application holds can be rotated without touching anyone's mail
+access.
 
-If mailcow is on a small VPS, these are the levers, in order of how much they save:
+**The From address must have the same local part as the login, not merely the same
+domain.** emailwiz writes this into Postfix:
 
-| Change | Where | Saves |
-|---|---|---|
-| `WOWorkersCount = "20"` → `"4"` | `data/conf/sogo/sogo.conf` | 1–2 GB — the big one; each SOGo worker reaches ~350 MB |
-| `SKIP_CLAMD=y` | `mailcow.conf` | ~1 GB |
-| `SxVMemLimit = 384` → `256` | `data/conf/sogo/sogo.conf` | caps any runaway worker |
-| `SKIP_OLEFY=y` | `mailcow.conf` | ~100 MB (document scanner) |
-| `SKIP_FTS=y` | `mailcow.conf` | ~200 MB (Flatcurve indexing) |
+```
+/^(.*)@your-domain\.com$/   ${1}
+```
 
-Trimming costs you antivirus scanning, attachment inspection and full-text search.
-On 4 GB those are the right things to lose; a server that gets OOM-killed is worse
-than one that lets a document attachment through.
+That is `smtpd_sender_login_maps`, and it resolves an envelope sender to the login
+name permitted to use it. Sending as `hello@your-domain.com` while authenticating as
+`arezoo@your-domain.com` is therefore **refused at submission** with a sender login
+mismatch — a connection that succeeds, authenticates, and then fails on the last
+step. Put the friendly part in `MAIL_FROM_NAME` instead.
 
 ---
 
@@ -102,34 +119,53 @@ Add these before testing. Nothing else is worth doing until they are correct.
 | Type | Name | Value | Notes |
 |---|---|---|---|
 | A | `mail` | mail server IP | **must not** be behind a CDN proxy — Cloudflare and similar break mail |
-| MX | `@` | `mail.yourdomain.com` | priority 10. `v=spf1 mx -all` implies it |
 | A | `@` | app server IP | the site itself |
-| TXT | `@` | `v=spf1 mx -all` | tighten to `-all` only after delivery is reliable |
-| TXT | `dkim._domainkey` | from the Mailcow UI | copy it exactly |
+| MX | `@` | `mail.yourdomain.com` | priority 10 |
+| TXT | `@` | from emailwiz's output | replaces whatever SPF was there |
+| TXT | `mail._domainkey` | from emailwiz's output | **the selector is `mail`**, which is not always what a stale record used |
 | TXT | `_dmarc` | `v=DMARC1; p=none; rua=mailto:you@…` | **start at `none`** |
-| PTR | — | IP → `mail.yourdomain.com` | set by your provider |
+| PTR | — | IP → `mail.yourdomain.com` | set by your provider, not by you |
 
-Optional but good: a CAA record (`0 issue "letsencrypt.org"`) pinning who may issue
-for the domain.
+Two of these are the ones that decide whether anything works, and both are easy to
+get wrong on a domain that has had mail records before:
 
-**Do not start DMARC at `p=quarantine`.** That is a policy telling receiving
-servers to send your mail to spam, and until reputation is established that is
-exactly what will happen — to yourself.
+- **A stale SPF record is a silent failure.** `v=spf1 -all` means *nothing may send
+  as this domain*, and it keeps meaning that until it is replaced. It produces no
+  error at the sender — only rejections at every receiver.
+- **A revoked DKIM key is a silent failure.** A record reading `v=DKIM1; p=` is a
+  key that was withdrawn. It looks present and authenticates nothing.
+
+**Do not start DMARC at `p=reject`.** That is a policy telling receiving servers to
+send your mail to spam — or, with strict alignment (`adkim=s; aspf=s`), to discard
+it outright. Until DKIM and SPF are both verified and aligned, that is exactly what
+will happen, to yourself. Move to `p=quarantine` and then `p=reject` only after a
+week of clean delivery.
 
 Verify what the world actually sees before going further:
 
 ```bash
 dig +short MX yourdomain.com
 dig +short TXT yourdomain.com
+dig +short TXT mail._domainkey.yourdomain.com
 dig +short -x <mail-server-ip>      # must print mail.yourdomain.com
 ```
+
+`./verify.sh` does all of the above through DNS-over-HTTPS, so it reports the
+published records rather than what a local resolver has cached.
+
+### The two things you cannot do yourself
+
+Both are tickets to your hosting provider, and no amount of configuration on this
+machine substitutes for them:
+
+- **Reverse DNS (PTR).** An IP with no PTR is rejected or treated as spam by Gmail
+  and Outlook. There is no way to set it from the server.
+- **Inbound port 25.** Most providers block it by default. Outbound 25 being open
+  is not the same thing, and is not sufficient.
 
 ---
 
 ## Test delivery before connecting the application
-
-This ordering matters. If mail does not reach Gmail, pointing the application at
-this server only gives you a harder way to find that out.
 
 ```bash
 # send a test from the mail host itself
@@ -143,40 +179,36 @@ Then check three destinations:
    inbox. A fresh IP has no reputation, and correct DNS alone does not override
    that.
 2. Your own inbox, to prove the path works end to end.
-3. A mailcow mailbox, to prove local delivery works.
+3. A local mailbox on the mail host, to prove local delivery works.
 
 When Gmail files it as spam, use the "Report not spam" button once. That is a
 direct positive signal to Gmail, and doing it a few times a day for a week moves a
-new IP from "probably a spammer" to "probably fine". Mailcow's UI shows the
-Rspamd score for each message, which is the fastest way to tell whether you have a
-reputation problem or an authentication problem.
+new IP from "probably a spammer" to "probably fine".
 
 ---
 
 ## Connect the application
 
-Create a dedicated mailbox for the application — `arezoo@yourdomain.com` — and use
-an app-specific password if your Mailcow version offers them under the mailbox's
-**Apps** tab. Then set these in `.env.production`:
+Then set these in `.env.production`:
 
 ```dotenv
 MAIL_MAILER=smtp
 MAIL_HOST=mail.yourdomain.com
 MAIL_PORT=587
 MAIL_USERNAME=arezoo@yourdomain.com
-MAIL_PASSWORD=<the app password>
+MAIL_PASSWORD=<the mailbox password>
 MAIL_SCHEME=tls
-MAIL_FROM_ADDRESS=hello@yourdomain.com
+MAIL_FROM_ADDRESS=arezoo@yourdomain.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
-Three details that are easy to get wrong:
+Four details that are easy to get wrong:
 
 - **Use a hostname, not `127.0.0.1`.** Inside the container the loopback address is
   that container, so a loopback host sends mail to the application itself.
-- **`MAIL_FROM_ADDRESS` must be in the same domain as `MAIL_USERNAME`.** A mismatch
-  fails authentication at the receiving end and the message is rejected or filed as
-  spam.
+- **The From local part must equal the login local part**, as described above.
+- **`MAIL_FROM_ADDRESS` must be in a domain whose DKIM you control.** A mismatch
+  fails at the receiving end and the message is rejected or filed as spam.
 - **Port 587 with `MAIL_SCHEME=tls` is STARTTLS.** Port 465 is implicit TLS and
   needs `MAIL_SCHEME=smtps`. Mixing them up produces a connection error that reads
   like a firewall problem.
@@ -196,46 +228,23 @@ in the mail itself.
 
 ---
 
-## If you must run Mailcow on the same host as the application
-
-Then ports 80 and 443 are already taken by Caddy, and Mailcow will fail to start
-with `bind: address already in use`. Move its web interface and put Caddy in front:
-
-```ini
-# mailcow.conf
-HTTP_BIND=172.17.0.1
-HTTP_PORT=8080
-HTTPS_BIND=172.17.0.1
-HTTPS_PORT=8443
-SKIP_LETS_ENCRYPT=y        # Caddy holds the certificate
-```
-
-Do not use 8081, 9081 or 65510 — Mailcow reserves them. Add
-`extra_hosts: ["host.docker.internal:host-gateway"]` to the `caddy` service, add a
-site block for `{$MAILCOW_HOST}` proxying to `host.docker.internal:8080`, and set
-`TRUSTED_PROXIES` on `nginx-mailcow` so it believes the forwarded scheme.
-
-Also drop the `queue` service from `compose.production.yaml` while you are short on
-memory — no job in this application implements `ShouldQueue`, so it costs memory
-for nothing.
-
----
-
 ## Troubleshooting
 
 **Mail from the server is rejected by Gmail with no SPF/DKIM error.** Almost always
-reputation, not configuration. Check the IP at mxtoolbox.com, and look at the
-Rspamd score in the Mailcow UI.
+reputation, not configuration. Check the IP at mxtoolbox.com.
 
 **Port 25 refuses connections.** Your provider blocks it. This is a ticket, not a
 configuration change.
 
 **Sending works, receiving does not.** Check the MX record resolves, and that PTR
-is actually set. Then check for a firewall dropping inbound 25.
+is actually set.
+
+**Submission authenticates and then fails.** Sender login mismatch — see
+[the mailbox section](#the-mailbox-for-the-application).
 
 **Connection times out on 587 from the app container.** The app cannot reach the
 mail host. If they are the same machine, use a hostname that resolves to a real
-address rather than 127.0.0.1, and confirm the port is published.
+address rather than 127.0.0.1.
 
 **Password-reset links in mail are `http://`.** The request that generated the link
 was not seen as HTTPS. This is the proxy chain, not mail: see

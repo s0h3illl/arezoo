@@ -325,7 +325,17 @@ FROM nginx:1.27-alpine AS production-web
 # belongs in the document root; a container holding the compiled assets but not
 # the file that runs them serves every asset correctly and 403s on the homepage
 # with "directory index of /var/www/html/public/ is forbidden".
-COPY docker/nginx/production.conf /etc/nginx/conf.d/default.conf
+# The default config that ships in the base image has to go, not be overwritten.
+# It is a server block listening on port 80 marked default_server, and so is the
+# one this image supplies; two of those on one port is a refusal to start with
+# "a duplicate default server" rather than anything that names the conflict.
+RUN rm -f /etc/nginx/conf.d/default.conf
+
+# Into templates/, not conf.d/, because that is the directory the image's
+# entrypoint watches: it runs envsubst over each .template and writes the result
+# into conf.d/ before nginx starts. Which variables it substitutes is restricted
+# by NGINX_ENVSUBST_FILTER in compose.production.yaml.
+COPY docker/nginx/production.conf.template /etc/nginx/templates/production.conf.template
 COPY --from=assets /var/www/html/public /var/www/html/public
 
 # The uploads this container serves are the app's uploads, so the symlink has to

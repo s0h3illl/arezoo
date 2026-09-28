@@ -1,7 +1,7 @@
 # Production stack.
 #
 #   cp .env.production.example .env.production
-#   # edit it: APP_KEY, APP_URL, DOMAIN, DB_PASSWORD, mail credentials
+#   # edit it: APP_KEY, APP_URL, DOMAIN, CERT_PATH, DB_PASSWORD, mail credentials
 #   docker compose --env-file .env.production -f compose.production.yaml build
 #   docker compose --env-file .env.production -f compose.production.yaml up -d
 #   docker compose --env-file .env.production -f compose.production.yaml exec app php artisan migrate --force
@@ -12,12 +12,17 @@
 #     the image was built with. A dev server in production would hand visitors
 #     unminified, unversioned source and an open websocket to anyone who asked.
 #
-#   - Caddy rather than nginx, because Caddy obtains and renews a certificate on
-#     its own. A certificate that quietly expires because a renewal cron stopped
-#     is a failure nobody notices until every visitor sees a browser warning.
+#   - nginx rather than Caddy. Caddy obtained and renewed its own certificate,
+#     which was the reason to choose it; that job now belongs to certbot on the
+#     host, and nginx terminates TLS directly. See docs/deployment.md.
 #
-#   - No bind mount of the working tree. The image is the release. The exception is
-#     storage/, below, which has to survive a deploy.
+#   - One nginx rather than a proxy in front of one. There is no longer a second
+#     language in the path, so there is nothing for a bridging container to
+#     translate: this one speaks HTTP to the browser and FastCGI to php-fpm.
+#
+#   - No bind mount of the working tree. The image is the release. The exceptions
+#     are the certificate, the ACME webroot and storage/, all of which have to
+#     survive a deploy.
 #
 #   - Migrations are not automatic. See docker/app/entrypoint-production.sh.
 #
@@ -35,35 +40,13 @@
 name: arezoo-prod
 
 services:
-  caddy:
-    image: caddy:2.8-alpine
-    restart: unless-stopped
-    environment:
-      # The address the certificate is issued for. Read from the environment so the
-      # hostname is never committed, and so a first deploy to a new domain is a
-      # change to .env.production rather than a commit.
-      DOMAIN: ${DOMAIN:?set DOMAIN in .env.production}
-      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env.production}
-    ports:
-      - '80:80'
-      - '443:443'
-      # 443/udp is QUIC. It is a genuine speed win and a genuine complication: some
-      # networks drop UDP, and a client that has a QUIC path it cannot use falls
-      # back to TCP. Leaving it off costs a little latency and removes the question.
-    volumes:
-      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      # Certificates and the ACME account live here. Without this volume Caddy
-      # re-requests on every boot, which hits Let's Encrypt's rate limit and can
-      # leave a domain locked out of certificates for hours.
-      - caddy-data:/data
-      - caddy-config:/config
-    depends_on:
-      web:
-        condition: service_started
-
-  # Caddy terminates TLS and forwards to this container, not to php-fpm directly:
-  # Caddy's proxy speaks HTTP and php-fpm speaks FastCGI. See docker/nginx/production.conf.
-  web:
+  # The front door: TLS, the compiled front end, and the bridge to php-fpm.
+  #
+  # Not two containers, as it once was. Caddy spoke HTTP and php-fpm speaks FastCGI,
+  # so a proxy in front of a bridging nginx existed only to translate between them.
+  # With nginx terminating TLS itself there is nothing left to translate, and the
+  # extra hop is gone with it.
+  nginx:
     image: arezoo-prod-web
     build:
       context: .
@@ -73,15 +56,42 @@ services:
     depends_on:
       app:
         condition: service_healthy
+    environment:
+      # Read from the environment so the hostname is never committed, and so a first
+      # deploy to a new domain is a change to .env.production rather than a commit.
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env.production}
+      # The directory holding fullchain.pem and privkey.pem, which is the certbot
+      # directory named after the first name on the certificate. Kept as a path
+      # rather than a name so the template does not have to know how certbot
+      # arranges its live/ tree.
+      CERT_PATH: ${CERT_PATH:?set CERT_PATH in .env.production}
+
+      # Which ${VARS} in the template nginx's entrypoint substitutes.
+      #
+      # Without this it substitutes every environment variable it can see, which
+      # includes $host, $scheme, $uri and every other nginx variable in the file —
+      # all of them replaced with an empty string. This restricts it to the two
+      # names above, so the nginx variables survive intact.
+      NGINX_ENVSUBST_FILTER: '^(DOMAIN|CERT_PATH)$'
+    ports:
+      - '80:80'
+      - '443:443'
+      # 443/udp is QUIC. It is a genuine speed win and a genuine complication: some
+      # networks drop UDP, and a client that has a QUIC path it cannot use falls
+      # back to TCP. Leaving it off costs a little latency and removes the question.
     volumes:
+      # The certificate, read-only. The container never writes it; certbot runs on
+      # the host and a deploy-hook reloads this container once it has renewed.
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      # Where certbot answers ACME challenges from, so that renewal needs neither a
+      # stopped web server nor a published port 80 on a second container. Read-only
+      # for the same reason as the certificate above.
+      - /var/www/certbot:/var/www/certbot:ro
       # Read-only, and the same volume the app writes to. Read-only is deliberate:
       # this container has no reason to modify an upload, and if it were
       # compromised the one thing it could not then do is change what the
       # application serves.
       - app-storage:/var/www/html/storage/app/public:ro
-    # No published port. Caddy is the only client that can reach this, which is
-    # what makes the forwarded-proto header in docker/nginx/production.conf
-    # trustworthy — see the comment on the map block there.
 
   app:
     # Named explicitly, and deliberately not `arezoo-app`. Compose otherwise derives
@@ -116,17 +126,24 @@ services:
       - app-storage:/var/www/html/storage/app
     healthcheck:
       # A socket on 9000 means the entrypoint finished: dependencies installed,
-      # config compiled, and the front-end manifest found. Same reasoning as the
-      # development stack — this is what Caddy waits for before serving anything.
+      # config compiled, and the front-end manifest found. This is what nginx waits
+      # for before serving anything.
       test: ['CMD', 'php', '-r', 'exit(@fsockopen("127.0.0.1", 9000) ? 0 : 1);']
       interval: 10s
       timeout: 5s
       retries: 12
       start_period: 30s
 
+  # Not started by `up`. Enabled with `--profile queue`.
+  #
+  # Nothing in this application implements ShouldQueue, so this service has nothing
+  # to do. It is a profile rather than a deletion because the first job that does
+  # would otherwise be a production incident rather than a configuration change —
+  # and because on a host that also runs a mail server, the memory it sits on is
+  # better spent there.
   queue:
-    # The app image, not a second build. These differ only in the command.
     image: arezoo-prod-app
+    profiles: ['queue']
     restart: unless-stopped
     depends_on:
       app:
@@ -145,9 +162,6 @@ services:
     # cache files at once is a race. The app container has already done it, and this
     # service shares the image.
     entrypoint: ['php', 'artisan', 'queue:work', '--tries=3', '--timeout=90', '--sleep=3']
-    # Nothing in this application is queued yet — no job implements ShouldQueue — so
-    # this service has nothing to do. It is here because the first job that does
-    # would otherwise be a production incident rather than a configuration change.
 
   mariadb:
     image: mariadb:11.4
@@ -190,6 +204,4 @@ services:
 volumes:
   app-storage:
   mariadb-data:
-  caddy-data:
-  caddy-config:
   mailpit-data:
