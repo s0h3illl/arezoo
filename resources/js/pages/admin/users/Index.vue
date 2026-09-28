@@ -5,8 +5,8 @@ import { onBeforeUnmount, ref, watch } from 'vue';
 import PaginationLink from '@/components/admin/PaginationLink.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { index, show, update } from '@/routes/admin/users';
-import type { User } from '@/types/admin';
 import type { Paginated } from '@/types';
+import type { User } from '@/types/admin';
 
 defineOptions({ layout: AdminLayout });
 
