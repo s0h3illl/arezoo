@@ -30,6 +30,15 @@
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
+        <!--
+            Read by tests/Support/Mailpit.php. These are loopback defaults for a
+            Mailpit running natively; the compose stack and CI both set them as real
+            environment variables, and PHPUnit does not overwrite a variable that is
+            already set, so the container's service name is what reaches config().
+        -->
+        <env name="MAILPIT_API_URL" value="http://127.0.0.1:8025"/>
+        <env name="MAILPIT_SMTP_HOST" value="127.0.0.1"/>
+        <env name="MAILPIT_SMTP_PORT" value="1025"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
