@@ -91,7 +91,7 @@ services:
       # this container has no reason to modify an upload, and if it were
       # compromised the one thing it could not then do is change what the
       # application serves.
-      - app-storage:/var/www/html/storage/app/public:ro
+      - app-storage:/var/www/html/storage/app:ro
 
   app:
     # Named explicitly, and deliberately not `arezoo-app`. Compose otherwise derives
