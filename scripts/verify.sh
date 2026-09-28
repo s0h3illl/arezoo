@@ -123,7 +123,7 @@ else
     no "no renewal configuration at /etc/letsencrypt/renewal/${DOMAIN}.conf"
 fi
 
-if certbot renew --dry-run --cert-name "${DOMAIN}" >/tmp/certbot-dryrun.log 2>&1; then
+if certbot renew --dry-run --no-random-sleep-on-renew --cert-name "${DOMAIN}" >/tmp/certbot-dryrun.log 2>&1; then
     ok "certbot renew --dry-run succeeded — renewal is proven, not assumed"
 else
     no "certbot renew --dry-run FAILED — see /tmp/certbot-dryrun.log"
