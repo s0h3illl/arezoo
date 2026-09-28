@@ -1,0 +1,195 @@
+# Production stack.
+#
+#   cp .env.production.example .env.production
+#   # edit it: APP_KEY, APP_URL, DOMAIN, DB_PASSWORD, mail credentials
+#   docker compose --env-file .env.production -f compose.production.yaml build
+#   docker compose --env-file .env.production -f compose.production.yaml up -d
+#   docker compose --env-file .env.production -f compose.production.yaml exec app php artisan migrate --force
+#
+# Differences from compose.yaml, and why each one is there:
+#
+#   - No Vite service. Production serves the compiled files in public/build, which
+#     the image was built with. A dev server in production would hand visitors
+#     unminified, unversioned source and an open websocket to anyone who asked.
+#
+#   - Caddy rather than nginx, because Caddy obtains and renews a certificate on
+#     its own. A certificate that quietly expires because a renewal cron stopped
+#     is a failure nobody notices until every visitor sees a browser warning.
+#
+#   - No bind mount of the working tree. The image is the release. The exception is
+#     storage/, below, which has to survive a deploy.
+#
+#   - Migrations are not automatic. See docker/app/entrypoint-production.sh.
+#
+#   - The database is not published to the host. It is reachable only from this
+#     network, so a mistaken bind to 0.0.0.0 cannot expose it.
+
+# A different Compose project name from compose.yaml, and not a cosmetic choice.
+#
+# Docker namespaces named volumes by project, so with both files saying `name: arezoo`
+# they would share arezoo_mariadb-data. Bringing this stack up on a laptop with the
+# development one stopped would then open the development database, and the first
+# `migrate --force` would run against it. A separate name makes that impossible
+# rather than merely unlikely, and it is also what keeps production volumes readable
+# on the server.
+name: arezoo-prod
+
+services:
+  caddy:
+    image: caddy:2.8-alpine
+    restart: unless-stopped
+    environment:
+      # The address the certificate is issued for. Read from the environment so the
+      # hostname is never committed, and so a first deploy to a new domain is a
+      # change to .env.production rather than a commit.
+      DOMAIN: ${DOMAIN:?set DOMAIN in .env.production}
+      ACME_EMAIL: ${ACME_EMAIL:?set ACME_EMAIL in .env.production}
+    ports:
+      - '80:80'
+      - '443:443'
+      # 443/udp is QUIC. It is a genuine speed win and a genuine complication: some
+      # networks drop UDP, and a client that has a QUIC path it cannot use falls
+      # back to TCP. Leaving it off costs a little latency and removes the question.
+    volumes:
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Certificates and the ACME account live here. Without this volume Caddy
+      # re-requests on every boot, which hits Let's Encrypt's rate limit and can
+      # leave a domain locked out of certificates for hours.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      web:
+        condition: service_started
+
+  # Caddy terminates TLS and forwards to this container, not to php-fpm directly:
+  # Caddy's proxy speaks HTTP and php-fpm speaks FastCGI. See docker/nginx/production.conf.
+  web:
+    image: arezoo-prod-web
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production-web
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    volumes:
+      # Read-only, and the same volume the app writes to. Read-only is deliberate:
+      # this container has no reason to modify an upload, and if it were
+      # compromised the one thing it could not then do is change what the
+      # application serves.
+      - app-storage:/var/www/html/storage/app/public:ro
+    # No published port. Caddy is the only client that can reach this, which is
+    # what makes the forwarded-proto header in docker/nginx/production.conf
+    # trustworthy — see the comment on the map block there.
+
+  app:
+    # Named explicitly, and deliberately not `arezoo-app`. Compose otherwise derives
+    # the tag from the service name, which is identical in both files, and a
+    # production build would land on top of the development image and leave a
+    # container running the wrong target with nothing in the output to say so.
+    image: arezoo-prod-app
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+    restart: unless-stopped
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      # Compose's own interpolation does not read env_file, so anything referenced
+      # with ${...} below has to be repeated here or it silently expands to empty.
+      APP_ENV: production
+      APP_DEBUG: 'false'
+      DB_CONNECTION: mariadb
+      DB_HOST: mariadb
+      DB_PORT: '3306'
+    volumes:
+      # Uploads. Avatars and wish images live on the public disk, and they are the
+      # one thing in this stack that a new image cannot recreate: baking them into
+      # the image would mean losing every user's picture on each deploy. Named
+      # rather than bind-mounted so that `docker compose down -v` is a deliberate
+      # way to lose them.
+      - app-storage:/var/www/html/storage/app
+    healthcheck:
+      # A socket on 9000 means the entrypoint finished: dependencies installed,
+      # config compiled, and the front-end manifest found. Same reasoning as the
+      # development stack — this is what Caddy waits for before serving anything.
+      test: ['CMD', 'php', '-r', 'exit(@fsockopen("127.0.0.1", 9000) ? 0 : 1);']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  queue:
+    # The app image, not a second build. These differ only in the command.
+    image: arezoo-prod-app
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    env_file:
+      - .env.production
+    environment:
+      APP_ENV: production
+      APP_DEBUG: 'false'
+      DB_CONNECTION: mariadb
+      DB_HOST: mariadb
+      DB_PORT: '3306'
+    volumes:
+      - app-storage:/var/www/html/storage/app
+    # No entrypoint: it compiles config caches, and two processes writing the same
+    # cache files at once is a race. The app container has already done it, and this
+    # service shares the image.
+    entrypoint: ['php', 'artisan', 'queue:work', '--tries=3', '--timeout=90', '--sleep=3']
+    # Nothing in this application is queued yet — no job implements ShouldQueue — so
+    # this service has nothing to do. It is here because the first job that does
+    # would otherwise be a production incident rather than a configuration change.
+
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MARIADB_DATABASE: ${DB_DATABASE:-arezoo}
+      MARIADB_USER: ${DB_USERNAME:-arezoo}
+      MARIADB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env.production}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env.production}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  # Not started by `up`. Enabled with `--profile mail` while setting up, to read
+  # verification and reset mail in a browser before a real provider exists.
+  #
+  # It is deliberately not part of the default production start: on a live site this
+  # is an open SMTP relay on a public port, and mail that is delivered to it instead
+  # of to a real recipient is mail that looks sent and arrives nowhere.
+  mailpit:
+    image: axllent/mailpit:v1.31
+    profiles: ['mail']
+    restart: unless-stopped
+    ports:
+      - '127.0.0.1:1025:1025'
+      - '127.0.0.1:8025:8025'
+    environment:
+      MP_MAX_MESSAGES: '1000'
+    volumes:
+      - mailpit-data:/data
+
+volumes:
+  app-storage:
+  mariadb-data:
+  caddy-data:
+  caddy-config:
+  mailpit-data:

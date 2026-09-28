@@ -69,6 +69,12 @@ services:
     # a service that will actually accept its mail.
 
   app:
+    # Named explicitly. Without an explicit name Compose derives one from the
+    # project, and the production file built a *different* image of the same service
+    # — from a different target — under an identical tag. The development container
+    # then ran the production entrypoint, which refuses to start without an APP_KEY
+    # in the environment, and the failure named neither file as the cause.
+    image: arezoo-dev-app
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -116,6 +122,12 @@ services:
       # The Inertia SSR server is started by the asset container, so from here it is
       # reachable by service name rather than by the loopback address
       # config/inertia.php defaults to.
+      #
+      # INERTIA_SSR_ENABLED has to be set here explicitly. config/inertia.php reads
+      # it and defaults to false, because production has no process serving the
+      # bundle and must not try; leaving it unset would therefore have switched SSR
+      # off in development as a side effect of making it safe in production.
+      INERTIA_SSR_ENABLED: 'true'
       INERTIA_SSR_URL: http://vite:${VITE_SSR_PORT:-13714}
       LOG_CHANNEL: single
       QUEUE_CONNECTION: database
@@ -136,10 +148,9 @@ services:
       start_period: 10s
 
   queue:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: app
+    # The same image as app, not a second build of the same target. These two differ
+    # only in the command they run.
+    image: arezoo-dev-app
     restart: unless-stopped
     depends_on:
       app:
@@ -179,6 +190,7 @@ services:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
 
   vite:
+    image: arezoo-dev-vite
     build:
       context: .
       dockerfile: docker/Dockerfile
@@ -221,10 +233,9 @@ services:
   # configured that way by accident.
   tests:
     profiles: ['test']
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: app
+    # Shares the app image so a test run cannot be testing a different build than
+    # the application it is testing.
+    image: arezoo-dev-app
     depends_on:
       # For vendor/ and the .env key, both of which the app container prepares. The
       # entrypoint below is bypassed so that preparing the tree is not repeated.

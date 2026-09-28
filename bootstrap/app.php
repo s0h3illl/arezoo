@@ -25,6 +25,26 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        /*
+         * The application never sees the outside world directly. TLS terminates at
+         * the reverse proxy in front of it, and php-fpm listens on a port nothing
+         * else can reach, so the only way a request arrives is through that proxy.
+         * Trusting it is what lets Laravel read the scheme and client address the
+         * proxy reports.
+         *
+         * Without this, Laravel believes every request arrived over plain HTTP,
+         * and that belief leaks into places a user can see: the verification and
+         * password-reset links in outgoing email are generated from the current
+         * scheme, so they would be emailed as http:// links — refused by clients,
+         * and a downgrade even where they were not. Sessions would also be issued
+         * without the Secure flag, and signed URLs would be validated against the
+         * wrong host.
+         *
+         * Trusting every proxy is only safe because the port is unreachable from
+         * outside. On a host where php-fpm is exposed, name the proxy instead.
+         */
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
