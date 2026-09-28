@@ -153,10 +153,14 @@ before it can be used, and the confirmation arrives by email. With the log drive
 nothing is sent, the user is told to check an inbox that does not exist, and every
 registration stalls at the same point.
 
-`MAIL_MAILER=log` ships as the default, and the Postmark values in the example are
-commented out. Once you have a real provider, uncomment and fill them in, and set
+`MAIL_MAILER=log` ships as the default, and every SMTP example in the environment
+template is commented out. Once a real server answers, fill one of them in and set
 `MAIL_FROM_ADDRESS` to a domain whose SPF and DKIM records you control — otherwise
 your mail is spam.
+
+See **[mail-server.md](mail-server.md)** for standing up a self-hosted Mailcow: the
+DNS records, the resource trims needed on a small host, and the order to test
+delivery in before connecting the application.
 
 To read what would have been sent before then:
 
