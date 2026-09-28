@@ -217,7 +217,7 @@ MAIL_HOST=mail.yourdomain.com
 MAIL_PORT=587
 MAIL_USERNAME=noreply@yourdomain.com
 MAIL_PASSWORD=<the noreply mailbox password>
-MAIL_SCHEME=tls
+MAIL_SCHEME=smtp
 MAIL_FROM_ADDRESS=noreply@yourdomain.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
@@ -229,9 +229,12 @@ Four details that are easy to get wrong:
 - **The From local part must equal the login local part**, as described above.
 - **`MAIL_FROM_ADDRESS` must be in a domain whose DKIM you control.** A mismatch
   fails at the receiving end and the message is rejected or filed as spam.
-- **Port 587 with `MAIL_SCHEME=tls` is STARTTLS.** Port 465 is implicit TLS and
-  needs `MAIL_SCHEME=smtps`. Mixing them up produces a connection error that reads
-  like a firewall problem.
+- **`MAIL_SCHEME` is `smtp` for port 587, `smtps` for port 465.** The old
+  `tls` value was a SwiftMailer-ism; Laravel's Symfony transport accepts exactly
+  `smtp` and `smtps` and throws "unsupported scheme" for anything else. With
+  `smtp` on 587 the transport negotiates STARTTLS when the server offers it,
+  which postfix here does. Mixing the two up produces a connection error that
+  reads like a firewall problem.
 
 Then restart and test a real registration:
 
