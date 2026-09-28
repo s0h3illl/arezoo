@@ -1,0 +1,38 @@
+# Dependencies and build output are installed into the bind-mounted working tree at
+# container start, by the entrypoints, so nothing that the build would produce
+# belongs in the image. The two build contexts that do need to stay are the assets
+# the image itself is assembled from, under docker/.
+
+.git
+.github
+.scratch
+.agents
+.claude
+.junie
+
+node_modules
+vendor
+public/build
+public/hot
+public/storage
+public/fonts-manifest.dev.json
+bootstrap/ssr
+storage/logs
+storage/framework/cache
+storage/framework/sessions
+storage/framework/views
+storage/app
+storage/pail
+
+tests
+database/database.sqlite
+*.log
+.env
+.env.backup
+.env.production
+
+# Written for agents and editors, and irrelevant to a running application.
+AGENTS.md
+CLAUDE.md
+CONTEXT.md
+landing-spec.dc.html
