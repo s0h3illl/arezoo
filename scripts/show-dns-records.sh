@@ -14,15 +14,39 @@ DOMAIN="arezoo.me"
 MAILDOM="mail.${DOMAIN}"
 
 dnsget() {
-    curl -s --max-time 15 "https://dns.google/resolve?name=${1}&type=${2}" 2>/dev/null \
+    curl -s --max-time 15 -H "accept: application/dns-json" \
+        "https://cloudflare-dns.com/dns-query?name=${1}&type=${2}" 2>/dev/null \
         | python3 -c "import sys,json;d=json.load(sys.stdin);print(' ; '.join(a['data'] for a in d.get('Answer',[])))" 2>/dev/null
 }
 
 # The DKIM value, read from the table emailwiz generated. Long, and unique to this
-# machine, which is why it cannot be written down in advance.
+# machine, which is why it cannot be written down in advance. The file is root
+# owned, so fall back to sudo when the invoking user cannot read it; the quoting
+# (continuation lines wrapped in quotes and tabs) is stripped by extracting the
+# base64 blob verbatim.
 DKIM=""
 for f in /etc/postfix/dkim/"${DOMAIN}"/mail.txt /etc/postfix/dkim/"${DOMAIN}"/dkim.txt; do
-    [ -f "$f" ] && DKIM="$(tr -d '\n' < "$f" | sed 's/k=rsa.*"p=/k=rsa; p=/; s/"\s*""//; s/"\s*).*//' | grep -o 'p=.*')" && break
+    [ -f "$f" ] || continue
+    if [ -r "$f" ]; then
+        raw="$(cat "$f")"
+    elif sudo -n true 2>/dev/null; then
+        raw="$(sudo sh -c "cat \"${f}\"" 2>/dev/null)" || raw=""
+    else
+        continue
+    fi
+    DKIM="$(printf '%s' "${raw}" | python3 -c "
+import sys, re
+s = sys.stdin.read()
+m = re.search(r'p=', s)
+if not m:
+    print(''); sys.exit()
+tail = s[m.end():]
+closes = [i for i in (tail.find('\" )'), tail.find('\")')) if i != -1]
+if closes:
+    tail = tail[:min(closes)]
+print('p=' + re.sub(r'[^A-Za-z0-9+/=]', '', tail))
+")"
+    [ -n "${DKIM}" ] && break
 done
 
 ipv4=$(dnsget "${DOMAIN}" A | head -1)
@@ -53,7 +77,11 @@ fi
 echo "-------------------------------------------------------------------"
 echo "2. SPF  (type TXT, name: @)"
 echo "-------------------------------------------------------------------"
-echo "   value: v=spf1 mx a:${MAILDOM} ip4:${ipv4} ip6:${ipv6} -all"
+# ip6 only appears when the domain actually publishes an AAAA record; an empty
+# `ip6:` token would make the record invalid.
+spfval="v=spf1 mx a:${MAILDOM} ip4:${ipv4}"
+[ -n "${ipv6}" ] && spfval="${spfval} ip6:${ipv6}"
+echo "   value: ${spfval} -all"
 echo
 echo "   currently published: $(dnsget "${DOMAIN}" TXT)"
 echo "   ^ if that reads 'v=spf1 -all' it authorises NOTHING to send as this"
@@ -81,13 +109,17 @@ echo "   ^ '(none)' means nothing can deliver to this domain at all."
 echo
 
 echo "-------------------------------------------------------------------"
-echo "5. A records — verify, do not change"
+echo "5. A/AAAA records — verify, do not change"
 echo "-------------------------------------------------------------------"
-echo "   @     -> ${ipv4}   (the site)"
-echo "   mail  -> $(dnsget "${MAILDOM}" A)"
+echo "   @     -> ${ipv4}   (the site, IPv4)"
+echo "   mail  -> $(dnsget "${MAILDOM}" A)   (IPv4)"
+echo "   @     -> $(dnsget "${DOMAIN}" AAAA)  (IPv6; publish if the host has one)"
+echo "   mail  -> $(dnsget "${MAILDOM}" AAAA) (IPv6)"
 echo "   ^ mail must NOT be behind a CDN proxy. Cloudflare and similar break"
 echo "     mail entirely, and it presents as mail that works locally and"
 echo "     vanishes in transit."
+echo "   ^ the host's own IPv6 is 2a14:7981:467:272::/124, so the suggested"
+echo "     AAAA value for both names is 2a14:7981:467:272::"
 echo
 
 echo "==================================================================="
@@ -102,7 +134,7 @@ echo "  b) Confirm inbound port 25 is not blocked. Most providers block it by"
 echo "     default. Outbound 25 being open is a different thing and is not"
 echo "     sufficient — without inbound 25 nothing can reach you."
 echo
-echo "  Current PTR: $(curl -s --max-time 15 "https://dns.google/resolve?name=$(echo ${ipv4} | awk -F. '{print $4"."$3"."$2"."$1}').in-addr.arpa&type=PTR" | python3 -c "import sys,json;d=json.load(sys.stdin);print(' '.join(a['data'] for a in d.get('Answer',[])) or 'NONE — this must be fixed')" 2>/dev/null)"
+echo "  Current PTR: $(curl -s --max-time 15 -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=$(echo ${ipv4} | awk -F. '{print $4"."$3"."$2"."$1}').in-addr.arpa&type=PTR" | python3 -c "import sys,json;d=json.load(sys.stdin);print(' '.join(a['data'] for a in d.get('Answer',[])) or 'NONE — this must be fixed')" 2>/dev/null)"
 echo
 echo "==================================================================="
 echo " After publishing:  bash scripts/verify.sh"

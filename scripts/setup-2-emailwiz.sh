@@ -31,16 +31,35 @@ if [ -z "${DEPLOY_HOME}" ]; then
     echo "!!! Cannot determine the home directory of '${DEPLOY_USER}'." >&2
     exit 1
 fi
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 DOMAIN="arezoo.me"
-MAIL_USER="arezoo"          # the mailbox the application authenticates as
+# Two mailboxes, two different roles, and no third way:
+#
+#   noreply@ — the application's sender. This is what MAIL_USERNAME and
+#              MAIL_FROM_ADDRESS point at, and emailwiz's
+#              smtpd_sender_login_maps equation maps login -> From, so the app
+#              is pinned to it: exactly one mailbox can be impersonated by the
+#              credential the app holds.
+#
+#   info@    — the human mailbox, where a reply and a DMARC report both land.
+MAIL_USER_NOREPLY="noreply"
+MAIL_USER_INFO="info"
 MAILPASSFILE="${DEPLOY_HOME}/.mailpass"
 if [ ! -r "${MAILPASSFILE}" ]; then
     echo "!!! ${MAILPASSFILE} is missing or unreadable." >&2
-    echo "    Generate one, mode 600, containing the mailbox password." >&2
+    echo "    Generate one, mode 600, containing the noreply mailbox password." >&2
     exit 1
 fi
-MAILPASS="$(cat "${MAILPASSFILE}")"
+MAILPASS_NOREPLY="$(cat "${MAILPASSFILE}")"
+
+MAILPASSFILE_INFO="${DEPLOY_HOME}/.mailpass-info"
+if [ ! -r "${MAILPASSFILE_INFO}" ]; then
+    echo "!!! ${MAILPASSFILE_INFO} is missing or unreadable." >&2
+    echo "    Generate one, mode 600, containing the info mailbox password." >&2
+    exit 1
+fi
+MAILPASS_INFO="$(cat "${MAILPASSFILE_INFO}")"
 
 echo "==> Preseeding debconf so the postfix install does not stop for an answer"
 # emailwiz purges postfix and reinstalls it, and a purge takes its debconf answers
@@ -81,20 +100,49 @@ chmod +x emailwiz.sh
 ./emailwiz.sh
 
 echo
-echo "==> Creating the application's mailbox: ${MAIL_USER}@${DOMAIN}"
-# emailwiz authenticates against Unix accounts, so the application gets its own
-# user rather than borrowing a person's. That way the credential the application
-# holds can be rotated without touching anyone's mail access.
-if id -u "${MAIL_USER}" >/dev/null 2>&1; then
-    echo "    already exists, resetting its password"
-else
-    useradd -m -G mail "${MAIL_USER}"
+echo "==> Adapting emailwiz's dovecot config to the installed dovecot"
+# emailwiz writes dovecot 2.3-era syntax, and the dovecot 2.4 that ships on this
+# distro refuses to start with it. The migration is idempotent; it only edits
+# the file when something of its own is found, and validates the result.
+"${SCRIPT_DIR}/dovecot-24-migrate.py"
+systemctl restart dovecot
+if ! systemctl is-active --quiet dovecot; then
+    echo "!!! dovecot failed to start with the adapted config." >&2
+    echo "    See: systemctl status dovecot" >&2
+    exit 1
 fi
-echo "${MAIL_USER}:${MAILPASS}" | chpasswd
+
+echo
+echo "==> Creating the mailboxes for ${DOMAIN}"
+# emailwiz authenticates against Unix accounts, so each mailbox is a system
+# user. The two are deliberately different things: noreply is the application's
+# identity and its password lives in .env.production; info is a person's and its
+# password lives in ~/.mailpass-info.
+for u in "${MAIL_USER_NOREPLY}" "${MAIL_USER_INFO}"; do
+    if id -u "${u}" >/dev/null 2>&1; then
+        echo "    ${u}@${DOMAIN}: already exists, resetting its password"
+    else
+        useradd -m -G mail "${u}"
+        echo "    ${u}@${DOMAIN}: created"
+    fi
+done
+echo "${MAIL_USER_NOREPLY}:${MAILPASS_NOREPLY}" | chpasswd
+echo "${MAIL_USER_INFO}:${MAILPASS_INFO}" | chpasswd
+
+# postmaster is mandatory for any domain that accepts mail (RFC 5321 4.5.1), and
+# root receives the system's local cron and error mail; both are aliased to info
+# so the person reading that mailbox sees them. Without this, postmaster@ and
+# root@ bounce or vanish into unread system mail.
+printf '\npostmaster: %s\nroot: %s\n' "${MAIL_USER_INFO}" "${MAIL_USER_INFO}" \
+    >> /etc/aliases
+newaliases
+
 # A new Unix account is created without a password expiry, but an explicit long
 # expiry is stated rather than assumed: an app credential that expires on its own
 # is a signup form that silently stops delivering.
-chage -M 99999 "${MAIL_USER}" 2>/dev/null || true
+for u in "${MAIL_USER_NOREPLY}" "${MAIL_USER_INFO}"; do
+    chage -M 99999 "${u}" 2>/dev/null || true
+done
 
 echo
 echo "==> Collecting the DNS records for the domain"

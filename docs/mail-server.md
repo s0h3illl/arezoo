@@ -75,6 +75,14 @@ the state the previous one left.
    configuring the application — the records have to exist before its mail is worth
    testing.
 
+   Debian 13 ships dovecot 2.4, and emailwiz still writes dovecot 2.3 syntax, which
+   ‌2.4 refuses to start with (`dovecot_config_version` missing, `ssl_cert` renamed,
+   bare `passdb { }` / `userdb { }` blocks, `mail_location` split into
+   `mail_driver` + `mail_path`, `plugin { }` replaced by `sieve_script` sections,
+   `%n`-style variables gone). `scripts/setup-2-emailwiz.sh` runs
+   `scripts/dovecot-24-migrate.py` right after emailwiz for exactly this reason; the
+   migration is idempotent and validates the result before restarting dovecot.
+
 3. **The DNS records.** Four of them, plus one only the hosting provider can set.
 
 4. **Test delivery**, before pointing the application at it. If mail does not reach
@@ -84,18 +92,30 @@ the state the previous one left.
 
 ---
 
-## The mailbox for the application
+## The mailboxes
 
-Give the application its own Unix user rather than borrowing a person's:
+Two mailboxes, two different roles, and no third way — emailwiz authenticates
+against Unix accounts, so each mailbox is a system user:
 
 ```bash
-useradd -m -G mail arezoo
-passwd arezoo
+useradd -m -G mail noreply     # the application's sender
+useradd -m -G mail info        # the human mailbox: replies and DMARC reports
 ```
 
-A user in the `mail` group can receive mail. A dedicated account means the
-credential the application holds can be rotated without touching anyone's mail
-access.
+A user in the `mail` group can receive mail. They are deliberately different
+things: `noreply`'s password is what `.env.production`'s `MAIL_PASSWORD` holds,
+so the application's sending credential can be rotated without touching a
+person's mail access; `info` is the address the site publishes, and where a
+human (you) reads the replies and the DMARC aggregate reports.
+
+`postmaster@` is mandatory for any domain that accepts mail (RFC 5321 4.5.1),
+and `root@` collects the system's local cron and error mail. Both are aliased to
+`info` so they land somewhere a person actually reads:
+
+```bash
+printf '\npostmaster: info\nroot: info\n' >> /etc/aliases
+newaliases
+```
 
 **The From address must have the same local part as the login, not merely the same
 domain.** emailwiz writes this into Postfix:
@@ -106,7 +126,7 @@ domain.** emailwiz writes this into Postfix:
 
 That is `smtpd_sender_login_maps`, and it resolves an envelope sender to the login
 name permitted to use it. Sending as `hello@your-domain.com` while authenticating as
-`arezoo@your-domain.com` is therefore **refused at submission** with a sender login
+`noreply@your-domain.com` is therefore **refused at submission** with a sender login
 mismatch — a connection that succeeds, authenticates, and then fails on the last
 step. Put the friendly part in `MAIL_FROM_NAME` instead.
 
@@ -195,10 +215,10 @@ Then set these in `.env.production`:
 MAIL_MAILER=smtp
 MAIL_HOST=mail.yourdomain.com
 MAIL_PORT=587
-MAIL_USERNAME=arezoo@yourdomain.com
-MAIL_PASSWORD=<the mailbox password>
+MAIL_USERNAME=noreply@yourdomain.com
+MAIL_PASSWORD=<the noreply mailbox password>
 MAIL_SCHEME=tls
-MAIL_FROM_ADDRESS=arezoo@yourdomain.com
+MAIL_FROM_ADDRESS=noreply@yourdomain.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 

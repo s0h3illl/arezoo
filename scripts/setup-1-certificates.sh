@@ -79,7 +79,6 @@ certbot certonly \
     --agree-tos \
     --email "${ACME_EMAIL}" \
     --cert-name "${CERT_NAME}" \
-    --dns-servers 1.1.1.1 8.8.8.8 \
     --keep-until-expiring \
     -d arezoo.me -d www.arezoo.me -d mail.arezoo.me
 

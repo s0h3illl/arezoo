@@ -141,7 +141,7 @@ else
 fi
 
 db_name=$(${COMPOSE} exec -T mariadb sh -c 'echo $MARIADB_DATABASE' 2>/dev/null | tr -d '\r')
-tables=$(${COMPOSE} exec -T mariadb sh -c 'mysql -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -N -e "select count(*) from information_schema.tables where table_schema=database()"' 2>/dev/null | tr -d '\r')
+tables=$(${COMPOSE} exec -T mariadb sh -c 'mariadb -u"$MARIADB_USER" -p"$MARIADB_PASSWORD" "$MARIADB_DATABASE" -N -e "select count(*) from information_schema.tables where table_schema=database()"' 2>/dev/null | tr -d '\r')
 [ -n "${tables}" ] && [ "${tables}" -gt 0 ] 2>/dev/null \
     && ok "database ${db_name} has ${tables} tables" \
     || no "could not count tables in ${db_name} — is the database initialised?"
@@ -188,8 +188,13 @@ echo "  rather than whatever a local resolver has cached."
 echo
 
 # dig is not installed on this host, so this asks a public resolver over HTTPS.
+# Cloudflare's endpoint, not Google's: dns.google is answered by this host but
+# cloudflare-dns.com is reachable, and a DNS check that silently returns nothing
+# reports every record as missing, which is its own false alarm. The JSON shape
+# of both endpoints is identical.
 dnsget() {
-    curl -s --max-time 15 "https://dns.google/resolve?name=${1}&type=${2}" 2>/dev/null \
+    curl -s --max-time 15 -H "accept: application/dns-json" \
+        "https://cloudflare-dns.com/dns-query?name=${1}&type=${2}" 2>/dev/null \
         | python3 -c "import sys,json;d=json.load(sys.stdin);print('\n'.join(a['data'] for a in d.get('Answer',[])))" 2>/dev/null
 }
 
@@ -223,7 +228,7 @@ echo "${dm}" | grep -qi "p=none"  && ok "DMARC is p=none (monitoring — correct
 echo
 echo "  -- reverse DNS (set by your hosting provider, not possible from here) --"
 ip=$(dnsget "${DOMAIN}" A | head -1)
-ptr=$(curl -s --max-time 15 "https://dns.google/resolve?name=$(echo "${ip}" | awk -F. '{print $4"."$3"."$2"."$1}').in-addr.arpa&type=PTR" 2>/dev/null \
+ptr=$(curl -s --max-time 15 -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=$(echo "${ip}" | awk -F. '{print $4"."$3"."$2"."$1}').in-addr.arpa&type=PTR" 2>/dev/null \
       | python3 -c "import sys,json;d=json.load(sys.stdin);print(' '.join(a['data'] for a in d.get('Answer',[])))" 2>/dev/null)
 if [ -n "${ptr}" ]; then
     ok "PTR for ${ip} -> ${ptr}"
