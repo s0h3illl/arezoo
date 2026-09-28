@@ -18,9 +18,29 @@
 
 set -euo pipefail
 
+# sudo's env_reset — the Debian default — sets HOME to the *target* user's home,
+# so under `sudo bash setup-2-emailwiz.sh` this variable is /root. The mailbox
+# password, the emailwiz checkout and the DNS records the user is meant to read
+# all live in the deploy user's home instead, so $HOME cannot be used for them.
+# SUDO_USER names whoever invoked sudo; when it is unset the script is already
+# running as that user and HOME is already right. The fallback stats this script,
+# which sits inside their checkout, rather than assuming a username.
+DEPLOY_USER="${SUDO_USER:-$(stat -c '%U' "${BASH_SOURCE[0]}")}"
+DEPLOY_HOME="$(getent passwd "${DEPLOY_USER}" | cut -d: -f6)"
+if [ -z "${DEPLOY_HOME}" ]; then
+    echo "!!! Cannot determine the home directory of '${DEPLOY_USER}'." >&2
+    exit 1
+fi
+
 DOMAIN="arezoo.me"
 MAIL_USER="arezoo"          # the mailbox the application authenticates as
-MAILPASS="$(cat ${HOME}/.mailpass)"
+MAILPASSFILE="${DEPLOY_HOME}/.mailpass"
+if [ ! -r "${MAILPASSFILE}" ]; then
+    echo "!!! ${MAILPASSFILE} is missing or unreadable." >&2
+    echo "    Generate one, mode 600, containing the mailbox password." >&2
+    exit 1
+fi
+MAILPASS="$(cat "${MAILPASSFILE}")"
 
 echo "==> Preseeding debconf so the postfix install does not stop for an answer"
 # emailwiz purges postfix and reinstalls it, and a purge takes its debconf answers
@@ -53,10 +73,11 @@ apt-get install -y -qq swaks || echo "!!! swaks failed to install; tests will be
 
 echo
 echo "==> Running emailwiz"
-cd ${HOME}/emailwiz
+cd "${DEPLOY_HOME}/emailwiz"
 chmod +x emailwiz.sh
 # Not run through sudo: this script is already root, and letting sudo re-resolve
 # the environment is a common source of a subtly different PATH mid-install.
+# Nothing in emailwiz.sh reads from stdin or opens a dialog, so it needs no TTY.
 ./emailwiz.sh
 
 echo
@@ -77,12 +98,13 @@ chage -M 99999 "${MAIL_USER}" 2>/dev/null || true
 
 echo
 echo "==> Collecting the DNS records for the domain"
-# emailwiz writes them to $HOME/dns_emailwizard, which is root's home when this
-# runs under sudo. Copied somewhere the unprivileged deploy user can read.
-cp -f /root/dns_emailwizard ${HOME}/mail-dns-records.txt 2>/dev/null || true
-chmod 644 ${HOME}/mail-dns-records.txt 2>/dev/null || true
-if [ -s ${HOME}/mail-dns-records.txt ]; then
-    cat ${HOME}/mail-dns-records.txt
+# emailwiz writes them to $HOME/dns_emailwizard, and $HOME here is root's, because
+# this script runs as root. Copied to the deploy user's home, which is where
+# show-dns-records.sh and they will both look.
+cp -f "${HOME}/dns_emailwizard" "${DEPLOY_HOME}/mail-dns-records.txt" 2>/dev/null || true
+chmod 644 "${DEPLOY_HOME}/mail-dns-records.txt" 2>/dev/null || true
+if [ -s "${DEPLOY_HOME}/mail-dns-records.txt" ]; then
+    cat "${DEPLOY_HOME}/mail-dns-records.txt"
 else
     echo "!!! dns_emailwizard was not produced; records may need reading from the"
     echo "    DKIM table by hand: /etc/postfix/dkim/${DOMAIN}/"
