@@ -13,6 +13,30 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # The mail service the SMTP tests deliver through, as a service container rather
+    # than a step: the tests read back what it received over its HTTP API, so it has
+    # to be up and listening before the suite starts rather than started alongside it.
+    # Its own health check is what makes that ordering real instead of a sleep.
+    services:
+      mailpit:
+        image: axllent/mailpit:v1.31
+        ports:
+          - 1025:1025
+          - 8025:8025
+        options: >-
+          --health-cmd "/mailpit readyz"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      # Passed explicitly because phpunit.xml only supplies a default, and PHPUnit
+      # will not overwrite a variable that is already set. Loopback is right here:
+      # both ports are published onto the runner itself.
+      MAILPIT_API_URL: http://127.0.0.1:8025
+      MAILPIT_SMTP_HOST: 127.0.0.1
+      MAILPIT_SMTP_PORT: '1025'
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
