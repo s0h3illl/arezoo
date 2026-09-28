@@ -36,3 +36,8 @@ AGENTS.md
 CLAUDE.md
 CONTEXT.md
 landing-spec.dc.html
+
+# Host-side operational tooling. Run directly on the machine, never part of an
+# image, and pulling it into the build context would only put a copy of the
+# deployment procedure into every layer.
+scripts

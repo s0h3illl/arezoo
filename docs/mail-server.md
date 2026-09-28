@@ -150,7 +150,7 @@ dig +short TXT mail._domainkey.yourdomain.com
 dig +short -x <mail-server-ip>      # must print mail.yourdomain.com
 ```
 
-`./verify.sh` does all of the above through DNS-over-HTTPS, so it reports the
+`./scripts/verify.sh` does all of the above through DNS-over-HTTPS, so it reports the
 published records rather than what a local resolver has cached.
 
 ### The two things you cannot do yourself

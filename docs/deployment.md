@@ -245,7 +245,7 @@ nowhere.
 ### 9. Verify
 
 ```bash
-./verify.sh
+./scripts/verify.sh
 ```
 
 That checks the containers, TLS, the security headers, the migrations, the mail
