@@ -228,12 +228,25 @@ echo "${dm}" | grep -qi "p=none"  && ok "DMARC is p=none (monitoring — correct
 echo
 echo "  -- reverse DNS (set by your hosting provider, not possible from here) --"
 ip=$(dnsget "${DOMAIN}" A | head -1)
-ptr=$(curl -s --max-time 15 -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=$(echo "${ip}" | awk -F. '{print $4"."$3"."$2"."$1}').in-addr.arpa&type=PTR" 2>/dev/null \
-      | python3 -c "import sys,json;d=json.load(sys.stdin);print(' '.join(a['data'] for a in d.get('Answer',[])))" 2>/dev/null)
+# A dead DoH query must not read as "no PTR" — that reports a false failure on a
+# network blip. Only a definitive NOERROR/NXDOMAIN with no answer is 'none'.
+ptr_out="$(curl -s --max-time 15 -H "accept: application/dns-json" "https://cloudflare-dns.com/dns-query?name=$(echo "${ip}" | awk -F. '{print $4"."$3"."$2"."$1}').in-addr.arpa&type=PTR" 2>/dev/null)"
+ptr=""
+if [ -n "${ptr_out}" ]; then
+    ptr="$(printf '%s' "${ptr_out}" | python3 -c "
+import sys, json
+d = json.load(sys.stdin)
+if d.get('Status') in (0, 3):
+    ans = d.get('Answer') or []
+    print(' '.join(a['data'] for a in ans))
+" 2>/dev/null)"
+fi
 if [ -n "${ptr}" ]; then
     ok "PTR for ${ip} -> ${ptr}"
-else
+elif [ -n "${ptr_out}" ]; then
     no "no PTR record for ${ip} — Gmail and Outlook will reject or spam mail from it"
+else
+    w "PTR lookup was not answered (network blip) — re-run; the record may be fine"
 fi
 
 echo
