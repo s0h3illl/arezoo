@@ -27,7 +27,11 @@ function isAnchor(href: string): boolean {
 
 <template>
     <header class="flex items-center justify-between px-5 py-4 sm:px-8">
-        <Link :href="home()" class="text-2xl font-extrabold text-emerald-600">
+        <Link
+            :href="home()"
+            class="flex items-center gap-2 text-2xl font-extrabold text-emerald-600"
+        >
+            <img src="/logo.svg" alt="" class="size-9" />
             آرزو
         </Link>
 
